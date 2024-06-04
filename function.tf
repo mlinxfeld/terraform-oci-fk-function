@@ -1,0 +1,14 @@
+resource "oci_functions_application" "FoggyKitchenFnApp" {
+    compartment_id = var.compartment_ocid
+    display_name = var.fk_app_name
+    subnet_ids = [oci_core_subnet.FoggyKitchenPublicSubnet.id]
+    shape = var.fk_shape
+}
+
+resource "oci_functions_function" "FoggyKitchenFn" {
+    depends_on = [null_resource.FoggyKitchenFnSetup]
+    application_id = oci_functions_application.FoggyKitchenFnApp.id
+    display_name = var.fk_fn_name
+    image = "${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
+    memory_in_mbs = var.memory_in_mbs
+}
