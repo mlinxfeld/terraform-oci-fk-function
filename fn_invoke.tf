@@ -1,4 +1,6 @@
 resource "null_resource" "FoggyKitchenFnInvoke" {
+  count = var.invoke_fn ? 1 : 0
+
   depends_on = [oci_functions_function.FoggyKitchenFn]
 
   provisioner "local-exec" {

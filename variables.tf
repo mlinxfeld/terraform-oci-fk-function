@@ -1,6 +1,6 @@
 variable "tenancy_ocid" {}
-variable "compartment_ocid" {}
 variable "region" {}
+variable "compartment_ocid" {}
 
 variable "ocir_user_name" {}
 variable "ocir_user_password" {}
@@ -34,5 +34,29 @@ variable "memory_in_mbs" {
 }
 
 variable "fk_shape" {
-   default = "GENERIC_ARM" # GENERIC_X86_ARM or GENERIC_X86 or GENERIC_ARM
+  default = "GENERIC_ARM" # GENERIC_X86_ARM or GENERIC_X86 or GENERIC_ARM
+}
+
+variable "invoke_fn" {
+  default = false
+}
+
+variable "use_my_fn" {
+  default = false
+}
+
+variable "dockerfile_content" {
+  default = ""
+}
+
+variable "func_py_content" {
+  default = ""
+}
+
+variable "func_yaml_content" {
+  default = ""
+}
+
+variable "requirements_txt_content" {
+  default = ""
 }
