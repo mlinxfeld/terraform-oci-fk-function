@@ -6,7 +6,7 @@ resource "oci_functions_application" "FoggyKitchenFnApp" {
 }
 
 resource "oci_functions_function" "FoggyKitchenFn" {
-    depends_on = [null_resource.FoggyKitchenFnSetup]
+    depends_on = [null_resource.FoggyKitchenFnSetup,null_resource.FoggyKitchenMyFnSetup]
     application_id = oci_functions_application.FoggyKitchenFnApp.id
     display_name = var.fk_fn_name
     image = "${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
