@@ -62,6 +62,12 @@ resource "null_resource" "FoggyKitchenMyFnSetup" {
   }
 
   provisioner "local-exec" {
+  command = <<EOT
+ image=$(docker images | grep "${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}" | awk -F ' ' '{print $3}') && [ -n "$image" ] && docker rmi "$image" -f
+EOT
+  }
+
+  provisioner "local-exec" {
     command = "fn build"
     working_dir = "${path.module}/functions/fkFn"
   }
