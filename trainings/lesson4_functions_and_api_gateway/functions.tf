@@ -12,10 +12,10 @@ module "oci-fk-custom-function-1" {
   func_py_content          = data.template_file.custom_fn_func_py_template1.rendered
   func_yaml_content        = data.template_file.custom_fn_func_yaml_template1.rendered
   requirements_txt_content = data.template_file.requirements_txt_content.rendered
-  invoke_fn                = true
+  invoke_fn                = false
   use_oci_logging          = true
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPublicSubnet.id
+  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
 }
 
 module "oci-fk-custom-function-2" {
@@ -31,10 +31,10 @@ module "oci-fk-custom-function-2" {
   func_py_content          = data.template_file.custom_fn_func_py_template2.rendered
   func_yaml_content        = data.template_file.custom_fn_func_yaml_template2.rendered
   requirements_txt_content = data.template_file.requirements_txt_content.rendered
-  invoke_fn                = true
+  invoke_fn                = false
   use_oci_logging          = false
   use_my_fn_app            = true
   my_fn_app_ocid           = module.oci-fk-custom-function-1.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPublicSubnet.id
+  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
 }
