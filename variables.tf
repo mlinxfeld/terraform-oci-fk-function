@@ -68,3 +68,12 @@ variable "use_my_fn_network" {
 variable "my_fn_subnet_ocid" {
   default = ""
 }
+
+variable "use_my_fn_app" {
+  default = false  
+}
+
+variable "my_fn_app_ocid" {
+  default = ""
+}  
+  
