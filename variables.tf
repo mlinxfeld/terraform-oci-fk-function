@@ -60,3 +60,11 @@ variable "func_yaml_content" {
 variable "requirements_txt_content" {
   default = ""
 }
+
+variable "use_my_fn_network" {
+  default = false
+}
+
+variable "my_fn_subnet_ocid" {
+  default = ""
+}
