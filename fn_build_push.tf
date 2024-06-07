@@ -62,9 +62,7 @@ resource "null_resource" "FoggyKitchenMyFnSetup" {
   }
 
   provisioner "local-exec" {
-  command = <<EOT
- image=\$(docker images | grep "${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}" | awk -F ' ' '{print $3}') && [ -n "\$image" ] && docker rmi "\$image" -f
-EOT
+    command = "image=$(docker images | grep "${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}" | awk -F ' ' '{print $3}') && if [ -n \"$image\" ]; then docker rmi \"$image\" -f; fi"
   }
 
   provisioner "local-exec" {
