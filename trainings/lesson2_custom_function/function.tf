@@ -11,5 +11,6 @@ module "oci-fk-custom-function" {
   func_py_content          = data.template_file.custom_fn_func_py_template.rendered
   func_yaml_content        = data.template_file.custom_fn_func_yaml_template.rendered
   requirements_txt_content = data.template_file.requirements_txt_content.rendered
+  use_oci_logging          = true
   invoke_fn                = true
 }

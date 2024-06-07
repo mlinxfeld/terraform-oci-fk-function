@@ -13,6 +13,7 @@ module "oci-fk-custom-function-1" {
   func_yaml_content        = data.template_file.custom_fn_func_yaml_template1.rendered
   requirements_txt_content = data.template_file.requirements_txt_content.rendered
   invoke_fn                = true
+  use_oci_logging          = true
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPublicSubnet.id
 }
@@ -31,6 +32,7 @@ module "oci-fk-custom-function-2" {
   func_yaml_content        = data.template_file.custom_fn_func_yaml_template2.rendered
   requirements_txt_content = data.template_file.requirements_txt_content.rendered
   invoke_fn                = true
+  use_oci_logging          = true
   use_my_fn_app            = true
   my_fn_app_ocid           = module.oci-fk-custom-function-1.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true

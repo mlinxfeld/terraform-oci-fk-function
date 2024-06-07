@@ -76,4 +76,19 @@ variable "use_my_fn_app" {
 variable "my_fn_app_ocid" {
   default = ""
 }  
-  
+
+variable "use_oci_logging" {
+  default = false  
+}
+
+variable "oci_logging_group_name" {
+  default = "FoggyKitchenFnAppLogGroup"
+}
+
+variable "oci_logging_group_description" {
+  default = "Foggy Kitchen Fn App Log Group"
+}
+
+variable "oci_logging_log_name" {
+  default = "FoggyKitchenFnAppInvokeLog"
+}
