@@ -1,7 +1,7 @@
 resource "oci_functions_application" "FoggyKitchenFnApp" {
     compartment_id = var.compartment_ocid
     display_name = var.fk_app_name
-    subnet_ids = var.use_my_fn_network ? [var.my_fn_subnet_ocid] : [oci_core_subnet.FoggyKitchenPublicSubnet.id]
+    subnet_ids = var.use_my_fn_network ? [var.my_fn_subnet_ocid] : [oci_core_subnet.FoggyKitchenPublicSubnet[0].id]
     shape = var.fk_shape
 }
 
