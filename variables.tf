@@ -94,5 +94,5 @@ variable "oci_logging_log_name" {
 }
 
 variable "fn_config" {
-  default = ""
+  default = {}
 }
