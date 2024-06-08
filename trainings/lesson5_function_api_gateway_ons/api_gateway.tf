@@ -19,7 +19,7 @@ resource "oci_apigateway_deployment" "FoggyKitchenAPIGatewayDeployment" {
           function_id = module.oci-fk-initiator-function.oci_app_fn.fn_ocid
       }
       methods = ["POST"]
-      path    = "/fninitiatior"
+      path    = "/fninitiator"
 
     }
   }
