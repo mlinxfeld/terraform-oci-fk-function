@@ -16,7 +16,7 @@ module "oci-fk-initiator-function-1" {
   use_oci_logging          = true
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}",
+  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}"}
 }
 
 module "oci-fk-collector-function-2" {
