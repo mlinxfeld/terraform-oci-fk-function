@@ -92,3 +92,7 @@ variable "oci_logging_group_description" {
 variable "oci_logging_log_name" {
   default = "FoggyKitchenFnAppInvokeLog"
 }
+
+variable "fn_config" {
+  default = ""
+}
