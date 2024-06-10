@@ -4,8 +4,12 @@ variable "region" {}
 variable "ocir_user_name" {}
 variable "ocir_user_password" {}
 
-variable "fn_custom_message" {
-  default = "Custom message!"
+variable "fncustom1_message" {
+  default = "Here is function fncustom1!"
+}
+
+variable "fncustom2_message" {
+  default = "Here is function fncustom2!"
 }
 
 variable "fn_name" {
