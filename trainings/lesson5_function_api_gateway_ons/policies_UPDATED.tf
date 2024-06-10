@@ -6,6 +6,8 @@ resource "oci_identity_policy" "FoggyKitchenAnyUserUseFnPolicy" {
   statements = ["ALLOW any-user to use functions-family in compartment id ${var.compartment_ocid} where ALL { request.principal.type= 'ApiGateway' , request.resource.compartment.id = '${var.compartment_ocid}'}"]
 }
 
+# Added Dynamic Group and Policy for ONS
+
 resource "oci_identity_dynamic_group" "FoggyKitchenFunctionDG" {
   provider       = oci.homeregion  
   compartment_id = var.tenancy_ocid

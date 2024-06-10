@@ -13,3 +13,7 @@ data "oci_identity_regions" "oci_regions" {
     values = [var.region]
   }
 }
+
+data "oci_streaming_stream_pool" "FoggyKitchenStreamPool" {
+    stream_pool_id = "${oci_streaming_stream_pool.FoggyKitchenStreamPool.id}"
+}

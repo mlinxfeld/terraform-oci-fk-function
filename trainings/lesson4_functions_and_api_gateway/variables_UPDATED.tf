@@ -4,18 +4,14 @@ variable "region" {}
 variable "ocir_user_name" {}
 variable "ocir_user_password" {}
 
-variable "fn_custom_message" {
-  default = "Custom message!"
+variable "fncustom1_message" {
+  default = "Here is function fncustom1!"
 }
 
-variable "fn_name" {
-  default = "fncustom"
+variable "fncustom2_message" {
+  default = "Here is function fncustom2!"
 }
 
 variable "httpx_ports" {
   default = ["80", "443"]
-}
-
-variable "fn_debug_mode" {
-  default = true
 }
