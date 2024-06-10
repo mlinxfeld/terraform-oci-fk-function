@@ -6,11 +6,12 @@ module "oci-fk-custom-function" {
   ocir_user_password       = var.ocir_user_password
   compartment_ocid         = var.compartment_ocid
   use_my_fn                = true
-  fk_fn_name               = var.fn_name
-  dockerfile_content       = data.template_file.custom_fn_dockerfile_template.rendered
-  func_py_content          = data.template_file.custom_fn_func_py_template.rendered
-  func_yaml_content        = data.template_file.custom_fn_func_yaml_template.rendered
-  requirements_txt_content = data.template_file.requirements_txt_content.rendered
+  fk_fn_name               = "fncustom"
+  dockerfile_content       = data.local_file.fncustom_dockerfile.content
+  func_py_content          = data.local_file.fncustom_func_py.content
+  func_yaml_content        = data.local_file.fncustom_func_yaml.content
+  requirements_txt_content = data.local_file.fncustom_requirements_txt.content
   use_oci_logging          = true
   invoke_fn                = true
+  fn_config                = {"FN_CUSTOM_MESSAGE" : "${var.fn_custom_message}"}
 }

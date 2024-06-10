@@ -11,3 +11,11 @@ variable "fn_custom_message" {
 variable "fn_name" {
   default = "fncustom"
 }
+
+variable "httpx_ports" {
+  default = ["80", "443"]
+}
+
+variable "fn_debug_mode" {
+  default = true
+}
