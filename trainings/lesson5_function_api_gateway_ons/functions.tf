@@ -16,7 +16,7 @@ module "oci-fk-initiator-function" {
   use_oci_logging          = true
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}"}
+  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}", "DEBUG_MODE" : "${var.fn_debug_mode}"}
 }
 
 module "oci-fk-collector-function" {
@@ -38,4 +38,5 @@ module "oci-fk-collector-function" {
   my_fn_app_ocid           = module.oci-fk-initiator-function.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
+  fn_config                = {"DEBUG_MODE" : "${var.fn_debug_mode}"}
 }

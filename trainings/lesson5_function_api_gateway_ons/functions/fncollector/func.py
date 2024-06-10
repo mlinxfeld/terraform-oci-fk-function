@@ -1,24 +1,32 @@
 import io
 import json
 import logging
-import oci
+import os
 from fdk import response
 
 def handler(ctx, data: io.BytesIO = None):
-    try:
-        body = json.loads(data.getvalue())
-    except (Exception, ValueError) as ex:
-        logging.getLogger().info('error parsing json payload: ' + str(ex))
-        raise
+    # Initialize logging
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
-    logging.getLogger().info("Received message: " + json.dumps(body))
+    DEBUG_MODE = os.getenv("DEBUG_MODE") is not None
 
-    message = body.get("message")
-    if message:
-        logging.getLogger().info("Processing message: " + message)
+    if DEBUG_MODE:
+        logger.info('Starting fncollector handler...')
 
+    # Read the incoming data
+    raw_data = data.getvalue().decode('utf-8')  # Decode bytes to string
+
+    if DEBUG_MODE:
+        logger.info(f'fncollector: Received message: {raw_data}')
+
+    # Respond with success
     return response.Response(
         ctx, response_data=json.dumps(
-            {"status": "Message processed"}),
+            {"status": "fncollector: Message processed"}),
         headers={"Content-Type": "application/json"}
     )
+
+if __name__ == "__main__":
+    from fdk import handle
+    handle(handler)

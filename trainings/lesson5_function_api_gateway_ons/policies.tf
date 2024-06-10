@@ -21,7 +21,7 @@ resource "oci_identity_policy" "FoggyKitchenFnONSPolicy" {
   compartment_id = var.tenancy_ocid
 
   statements = [
-    "Allow dynamic-group FoggyKitchenFunctionDG to manage ons-topics in compartment id '${var.compartment_ocid}'",
-    "Allow dynamic-group FoggyKitchenFunctionDG to use ons-subscriptions in compartment id '${var.compartment_ocid}'"
+    "Allow dynamic-group FoggyKitchenFunctionDG to manage ons-topics in tenancy",
+    "Allow dynamic-group FoggyKitchenFunctionDG to use ons-subscriptions in tenancy"
   ]
 }  

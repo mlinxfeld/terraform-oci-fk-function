@@ -15,3 +15,7 @@ variable "fn_name" {
 variable "httpx_ports" {
   default = ["80", "443"]
 }
+
+variable "fn_debug_mode" {
+  default = true
+}
