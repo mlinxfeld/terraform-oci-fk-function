@@ -10,3 +10,4 @@ resource "oci_ons_subscription" "FoggyKitchenSubscription" {
     protocol       = "ORACLE_FUNCTIONS"
     topic_id       = oci_ons_notification_topic.FoggyKitchenTopic.id
 }
+

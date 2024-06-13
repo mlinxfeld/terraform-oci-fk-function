@@ -96,3 +96,7 @@ variable "oci_logging_log_name" {
 variable "fn_config" {
   default = {}
 }
+
+variable "fn_timeout_in_seconds" {
+   default = 30
+}

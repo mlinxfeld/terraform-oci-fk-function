@@ -1,4 +1,10 @@
 module "oci-fk-initiator-function" {
+  depends_on               = [
+    data.local_file.fninitiator_dockerfile,
+    data.local_file.fninitiator_func_py,
+    data.local_file.fninitiator_func_yaml,
+    data.local_file.fninitiator_requirements_txt
+  ]  
   source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
@@ -15,10 +21,22 @@ module "oci-fk-initiator-function" {
   use_oci_logging          = true
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}", "DEBUG_MODE" : "${var.fn_debug_mode}"}
+  fn_config                = {
+    "DEBUG_MODE"      : "${var.fn_debug_mode}", 
+    "TOPIC_OCID"      : "${oci_ons_notification_topic.FoggyKitchenTopic.id}", 
+    "STREAM_OCID"     : "${oci_streaming_stream.FoggyKitchenStream.id}", 
+    "STREAM_ENDPOINT" : "${data.oci_streaming_stream_pool.FoggyKitchenStreamPool.endpoint_fqdn}"
+ }
 }
 
 module "oci-fk-collector-function" {
+  depends_on               = [
+    module.oci-fk-adb,
+    data.local_file.fncollector_dockerfile,
+    data.local_file.fncollector_func_py,
+    data.local_file.fncollector_func_yaml,
+    data.local_file.fncollector_requirements_txt
+  ]    
   source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
@@ -37,10 +55,26 @@ module "oci-fk-collector-function" {
   my_fn_app_ocid           = module.oci-fk-initiator-function.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"DEBUG_MODE" : "${var.fn_debug_mode}"}
+  fn_timeout_in_seconds    = 300
+  fn_config                = {
+    "DEBUG_MODE"            : "${var.fn_debug_mode}", 
+    "STREAM_OCID"           : "${oci_streaming_stream.FoggyKitchenStream.id}", 
+    "STREAM_ENDPOINT"       : "${data.oci_streaming_stream_pool.FoggyKitchenStreamPool.endpoint_fqdn}",
+    "ADB_OCID"              : "${module.oci-fk-adb.adb_database.adb_database_id}"
+    "ADB_APP_USER_NAME"     : "${var.adb_app_user_name}", 
+    "ADB_APP_USER_PASSWORD" : "${var.adb_app_user_password}", 
+    "ADB_SQLNET_ALIAS"      : "${var.adb_sqlnet_alias}"
+  }
 }
 
 module "oci-fk-adb-setup-function" {
+  depends_on               = [
+    module.oci-fk-adb,
+    data.local_file.fnadbsetup_dockerfile,
+    data.local_file.fnadbsetup_func_py,
+    data.local_file.fnadbsetup_func_yaml,
+    data.local_file.fnadbsetup_requirements_txt
+  ]     
   source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
@@ -59,5 +93,12 @@ module "oci-fk-adb-setup-function" {
   my_fn_app_ocid           = module.oci-fk-initiator-function.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
   my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPublicSubnet.id
-  fn_config                = {"DEBUG_MODE" : "${var.fn_debug_mode}", "ADB_ADMIN_PASSWORD": "${var.adb_admin_password}", "ADB_APP_USER_NAME": "${var.adb_app_user_name}", "ADB_APP_USER_PASSWORD" : "${var.adb_app_user_password}", "ADB_SQLNET_ALIAS": "${var.adb_sqlnet_alias}"}
+  fn_config                = {
+    "DEBUG_MODE"            : "${var.fn_debug_mode}", 
+    "ADB_OCID"              : "${module.oci-fk-adb.adb_database.adb_database_id}"
+    "ADB_ADMIN_PASSWORD"    : "${var.adb_admin_password}", 
+    "ADB_APP_USER_NAME"     : "${var.adb_app_user_name}", 
+    "ADB_APP_USER_PASSWORD" : "${var.adb_app_user_password}", 
+    "ADB_SQLNET_ALIAS"      : "${var.adb_sqlnet_alias}"
+  }
 }

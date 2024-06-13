@@ -32,5 +32,5 @@ variable "adb_app_user_name" {
 variable "adb_app_user_password" {}
 
 variable "adb_sqlnet_alias" {
-  default = "FoggyKitchenADB_medium"
+  default = "foggykitchenadb_medium"
 }

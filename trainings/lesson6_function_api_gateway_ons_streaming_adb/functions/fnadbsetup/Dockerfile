@@ -1,55 +1,60 @@
-FROM oraclelinux:7-slim as ol7
+FROM oraclelinux:8-slim as ol8
 
-RUN  yum -y install yum-utils && \
-     yum -y install oracle-release-el7 && \
-     yum-config-manager --enable ol7_oracle_instantclient && \
-     yum -y install oracle-instantclient18.3-basic && \
-     yum install -y unzip && \
-     rm -rf /var/cache/yum
+# Install dependencies
+RUN microdnf -y install dnf
+RUN microdnf -y install oracle-release-el8
+RUN dnf config-manager --enable ol8_oracle_instantclient
+RUN microdnf -y install oracle-instantclient19.23-basic
 
-COPY tde_wallet.zip /usr/lib/oracle/18.3/client64/lib/network/admin/
+# Installing Python
+RUN   microdnf repolist && \
+      microdnf module enable python38 && \
+      microdnf repolist && \
+      microdnf install python38 && \
+      microdnf install python38-pip && \
+      microdnf install libaio && \
+      microdnf install openssh-clients && \
+      microdnf install findutils && \
+      microdnf install less && \
+      microdnf install wget && \
+      microdnf clean all && \
+      pip3 install -U pip && \
+      pip3 install -U setuptools && \
+      pip3 install -U cryptography
 
-WORKDIR /usr/lib/oracle/18.3/client64/lib/network/admin/
-RUN unzip -o tde_wallet.zip -d /usr/lib/oracle/18.3/client64/lib/network/admin/ 
-COPY sqlnet.ora /usr/lib/oracle/18.3/client64/lib/network/admin/
+# Install GCC and other development tools
+RUN dnf -y groupinstall "Development Tools" && \
+    dnf -y install python3-devel libaio-devel
 
-FROM fnproject/python:3.6-dev as build-stage
+# Updating the packages
+RUN  microdnf update && \
+     microdnf clean all
 
 WORKDIR /function
-
 ADD requirements.txt /function/
 
-RUN pip3 install --target /python/  --no-cache --no-cache-dir -r requirements.txt && \			 
-    rm -fr ~/.cache/pip /tmp* requirements.txt func.yaml Dockerfile .venv
-
+RUN pip3 install --target /python/  --no-cache --no-cache-dir -r requirements.txt && \
+  rm -fr ~/.cache/pip /tmp* requirements.txt func.yaml Dockerfile .venv && \
+  chmod -R o+r /python
 ADD . /function/
-
 RUN rm -fr /function/.pip_cache
 
-FROM fnproject/python:3.6
-
+RUN groupadd --gid 1000 fn && adduser --uid 1000 --gid fn fn
+RUN mkdir -p /tmp/
+RUN chmod -R 777 /tmp/
+RUN mkdir -p /home/fn/.ssh
+RUN chown -R fn:fn /tmp/
+RUN chown -R fn:fn /home/fn/.ssh
+ 
+ADD . /function/
 WORKDIR /function
+RUN chmod -R o+r /function
 
-COPY --from=build-stage /function /function
+ENV PYTHONPATH=/function:/python
+USER fn
 
-COPY --from=build-stage /python /python
+ENV ORACLE_HOME='/usr/lib/oracle/19.23/client64/lib/'
 
-RUN mkdir -p /usr/lib/oracle/
-
-COPY --from=ol7 /usr/lib/oracle/. /usr/lib/oracle/
-
-RUN ln -s /usr/lib/oracle/18.3/client64/lib/libclntsh.so.18.1 /usr/lib/oracle/18.3/client64/lib/libclntsh.so
-
-RUN ls -latr /usr/lib/oracle/18.3/client64/lib/*.*
-
-RUN ls -latr /usr/lib/oracle/18.3/client64/lib/network/admin/*.*
-
-ENV PYTHONPATH=/python
-
-ENV LD_LIBRARY_PATH=/usr/lib/oracle/18.3/client64/lib
-
-ENV TNS_ADMIN=/usr/lib/oracle/18.3/client64/lib/network/admin
-
-RUN apt-get install libaio1
+ENV TNS_ADMIN='/tmp'
 
 ENTRYPOINT ["/python/bin/fdk", "/function/func.py", "handler"]
