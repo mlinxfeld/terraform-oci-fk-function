@@ -182,8 +182,11 @@ def handler(ctx, data: io.BytesIO = None):
         cursor_details = oci.streaming.models.CreateCursorDetails()
         cursor_details.partition = "0"
         cursor_details.type = "TRIM_HORIZON"
-        cursor = streamClient.create_cursor(stream_ocid, cursor_details)
-        get_messages_response = streamClient.get_messages(stream_ocid, cursor.data.value)
+        cursor_details.commit_on_get = True 
+        cursor_response = streamClient.create_cursor(stream_ocid, cursor_details)
+        stream_cursor = cursor_response.data.value
+
+        get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor)
 
         if DEBUG_MODE:
             logging.getLogger().info(f'Fetched messages from stream: {get_messages_response.data}')
@@ -273,6 +276,7 @@ def handler(ctx, data: io.BytesIO = None):
                 new_humidity = str(b64decode(message.value).decode('utf-8'))
                 iot_record = "insert into iot_data values ({},'{}',{},{},SYSDATE)".format(new_id, new_device, new_temperature, new_humidity)
                 adb_cursor.execute(iot_record)
+                adb_connection.commit()
                 if DEBUG_MODE:
                     logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
         
@@ -324,12 +328,15 @@ def handler(ctx, data: io.BytesIO = None):
             headers={"Content-Type": "application/json"}
         )
 
+
     return response.Response(
         ctx,
         response_data=json.dumps({'status'     : 0
                                   ,'fncollector' : 'Finished'}, indent=2),
         headers={"Content-Type": "application/json"}
     )
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 

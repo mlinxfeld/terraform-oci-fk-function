@@ -10,5 +10,4 @@ module "oci-fk-adb" {
   compartment_ocid                      = var.compartment_ocid
   use_existing_vcn                      = false
   adb_private_endpoint                  = false
-  whitelisted_ips                       = [oci_core_virtual_network.FoggyKitchenVCN.id]
 }
