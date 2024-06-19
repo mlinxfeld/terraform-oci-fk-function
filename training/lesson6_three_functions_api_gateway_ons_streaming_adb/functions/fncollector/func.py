@@ -8,6 +8,7 @@ import os
 import re
 import secrets
 import string
+import random
 import subprocess
 import oracledb
 from fdk import response
@@ -113,6 +114,12 @@ def get_wallet_from_adb(adb_client, adb_ocid, wallet_dir):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+def generate_random_string(length=8):
+    letters = string.ascii_lowercase + string.digits
+    return ''.join(random.choice(letters) for i in range(length))
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 # Setting environment
 DEBUG_MODE = os.getenv("DEBUG_MODE") is not None
@@ -176,17 +183,22 @@ def handler(ctx, data: io.BytesIO = None):
 
 # --- Connect to Stream and obtain message response
 
+    group_name = "iot_consumer_group"
+    instance_name = "iot_consumer_instance_" + generate_random_string()
+
     try:
         # Get messages from the stream
 
-        cursor_details = oci.streaming.models.CreateCursorDetails()
-        cursor_details.partition = "0"
-        cursor_details.type = "TRIM_HORIZON"
-        cursor_details.commit_on_get = True 
-        cursor_response = streamClient.create_cursor(stream_ocid, cursor_details)
+        cursor_details = oci.streaming.models.CreateGroupCursorDetails(
+            group_name=group_name,
+            instance_name=instance_name,
+            type=oci.streaming.models.CreateGroupCursorDetails.TYPE_LATEST,
+            commit_on_get=True
+        )
+        cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
         stream_cursor = cursor_response.data.value
 
-        get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor)
+        get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor, limit=10)
 
         if DEBUG_MODE:
             logging.getLogger().info(f'Fetched messages from stream: {get_messages_response.data}')
@@ -272,14 +284,22 @@ def handler(ctx, data: io.BytesIO = None):
                 rows = cursor_result.fetchone()
                 new_id = str(rows).replace(',','')
                 new_device = str(b64decode(message.key).decode('utf-8'))
-                new_temperature = str(b64decode(message.value).decode('utf-8'))
-                new_humidity = str(b64decode(message.value).decode('utf-8'))
+                new_device_data_str = b64decode(message.value).decode('utf-8')
+                new_device_data = json.loads(new_device_data_str)
+                new_temperature = new_device_data.get('temperature')
+                new_humidity = new_device_data.get('humidity')
                 iot_record = "insert into iot_data values ({},'{}',{},{},SYSDATE)".format(new_id, new_device, new_temperature, new_humidity)
                 adb_cursor.execute(iot_record)
                 adb_connection.commit()
                 if DEBUG_MODE:
                     logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
-        
+
+            # use the next-cursor for iteration
+            cursor_response = get_messages_response.headers["opc-next-cursor"]    
+
+            if DEBUG_MODE:
+                logging.getLogger().info(f'Setting next cursor in the stream.')
+
         except Exception as ex:
             logging.getLogger().error(f'Error inserting data into IOT_DATA table: {ex}')
             logging.getLogger().info(f'Leaving handler w/errors')

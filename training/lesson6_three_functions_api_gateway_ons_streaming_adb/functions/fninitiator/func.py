@@ -71,11 +71,12 @@ def handler(ctx, data: io.BytesIO = None):
     try:
         body = json.loads(data.getvalue())
         device_id = str(body.get("device_id"))
-        temperature = str(body.get("temperature"))  
+        device_data = body.get("device_data", {})
+        device_data_str = json.dumps(device_data)
 
         stream_message_entry = oci.streaming.models.PutMessagesDetailsEntry()
         stream_message_entry.key = b64encode(bytes(str(device_id), 'utf-8')).decode('utf-8')
-        stream_message_entry.value = b64encode(bytes(str(temperature), 'utf-8')).decode('utf-8')
+        stream_message_entry.value = b64encode(bytes(device_data_str, 'utf-8')).decode('utf-8')
         
         stream_messages = oci.streaming.models.PutMessagesDetails()
         stream_messages.messages = [stream_message_entry]
