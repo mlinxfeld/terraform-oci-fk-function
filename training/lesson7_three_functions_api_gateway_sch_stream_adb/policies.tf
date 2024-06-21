@@ -14,17 +14,19 @@ resource "oci_identity_dynamic_group" "FoggyKitchenFunctionDG" {
   matching_rule  = "ALL {resource.type = 'fnfunc', resource.compartment.id = '${var.compartment_ocid}'}"
 }
 
-resource "oci_identity_policy" "FoggyKitchenFnONSPolicy" {
+resource "oci_identity_policy" "FoggyKitchenFnSCHPolicy" {
   provider = oci.homeregion  
-  name = "FoggyKitchenFnONSPolicy"
-  description = "FoggyKitchenFnONSPolicy"
+  name = "FoggyKitchenFnSCHPolicy"
+  description = "FoggyKitchenFnSCHPolicy"
   compartment_id = var.tenancy_ocid
 
   statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to manage ons-topics in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to use ons-subscriptions in tenancy"
+   "Allow any-user to {STREAM_READ, STREAM_CONSUME} in compartment id ${var.compartment_ocid} where all {request.principal.type='serviceconnector', target.stream.id='${oci_streaming_stream.FoggyKitchenStream.id}', request.principal.compartment.id='${var.compartment_ocid}'}",
+   "Allow any-user to use fn-function in compartment id ${var.compartment_ocid} where all {request.principal.type='serviceconnector', request.principal.compartment.id='${var.compartment_ocid}'}",
+   "Allow any-user to use fn-invocation in compartment id ${var.compartment_ocid} where all {request.principal.type='serviceconnector', request.principal.compartment.id='${var.compartment_ocid}'}"
   ]
 }  
+
 resource "oci_identity_policy" "FoggyKitchenFnStreamPolicy" {
   provider = oci.homeregion  
   name = "FoggyKitchenFnStreamPolicy"

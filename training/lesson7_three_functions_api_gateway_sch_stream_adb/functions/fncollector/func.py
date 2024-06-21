@@ -179,40 +179,6 @@ def handler(ctx, data: io.BytesIO = None):
     if DEBUG_MODE:
         logging.getLogger().info('Starting fncollector handler...')
 
-# --- Connect to Stream and obtain message response
-
-    group_name = "iot_consumer_group"
-    instance_name = "iot_consumer_instance_" + generate_random_string()
-
-    try:
-        # Get messages from the stream
-
-        cursor_details = oci.streaming.models.CreateGroupCursorDetails(
-            group_name=group_name,
-            instance_name=instance_name,
-            type=oci.streaming.models.CreateGroupCursorDetails.TYPE_LATEST,
-            commit_on_get=True
-        )
-        cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
-        stream_cursor = cursor_response.data.value
-
-        get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor, limit=10)
-
-        if DEBUG_MODE:
-            logging.getLogger().info(f'Fetched messages from stream: {get_messages_response.data}')
-
-    except Exception as ex:
-        logging.getLogger().error(f'Error obtaining data from Stream: {ex}')
-        logging.getLogger().info(f'Leaving handler w/errors')
-
-        return response.Response(
-            ctx,
-            response_data=json.dumps({'status'     : 1
-                                    ,'step'       : 'Connect to Stream and obtain message response'
-                                    ,'exception'  : str(ex)}, indent=2),
-            headers={"Content-Type": "application/json"}
-        )
-
 # --- DB client initialization
 
     try:
@@ -275,40 +241,35 @@ def handler(ctx, data: io.BytesIO = None):
 
 # --- Update iot_data table with Stream message response
 
-    if len(get_messages_response.data):    
-        try:
-            for message in get_messages_response.data:
-                cursor_result = adb_cursor.execute("select iot_data_seq.nextval from dual")
-                rows = cursor_result.fetchone()
-                new_id = str(rows).replace(',','')
-                new_device = str(b64decode(message.key).decode('utf-8'))
-                new_device_data_str = b64decode(message.value).decode('utf-8')
-                new_device_data = json.loads(new_device_data_str)
-                new_temperature = new_device_data.get('temperature')
-                new_humidity = new_device_data.get('humidity')
-                iot_record = "insert into iot_data values ({},'{}',{},{},SYSDATE)".format(new_id, new_device, new_temperature, new_humidity)
-                adb_cursor.execute(iot_record)
-                adb_connection.commit()
-                if DEBUG_MODE:
-                    logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
+    messages = json.loads(data.getvalue())
 
-            # use the next-cursor for iteration
-            cursor_response = get_messages_response.headers["opc-next-cursor"]    
-
+    try:
+        for message in messages:
+            cursor_result = adb_cursor.execute("select iot_data_seq.nextval from dual")
+            rows = cursor_result.fetchone()
+            new_id = str(rows).replace(',','')
+            new_device = b64decode(message.get('key')).decode('utf-8')
+            new_device_data_str = b64decode(message.get('value')).decode('utf-8')
+            new_device_data = json.loads(new_device_data_str)
+            new_temperature = new_device_data.get('temperature')
+            new_humidity = new_device_data.get('humidity')
+            iot_record = "insert into iot_data values ({},'{}',{},{},SYSDATE)".format(new_id, new_device, new_temperature, new_humidity)
+            adb_cursor.execute(iot_record)
+            adb_connection.commit()
             if DEBUG_MODE:
-                logging.getLogger().info(f'Setting next cursor in the stream.')
+                logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
 
-        except Exception as ex:
-            logging.getLogger().error(f'Error inserting data into IOT_DATA table: {ex}')
-            logging.getLogger().info(f'Leaving handler w/errors')
+    except Exception as ex:
+        logging.getLogger().error(f'Error inserting data into IOT_DATA table: {ex}')
+        logging.getLogger().info(f'Leaving handler w/errors')
 
-            return response.Response(
-                ctx,
-                response_data=json.dumps({'status'     : 1
-                                        ,'step'       : 'Update iot_data table with Stream message response'
-                                        ,'exception'  : str(ex)}, indent=2),
-                headers={"Content-Type": "application/json"}
-            )
+        return response.Response(
+            ctx,
+            response_data=json.dumps({'status'     : 1
+                                    ,'step'       : 'Update iot_data table with Stream message response'
+                                    ,'exception'  : str(ex)}, indent=2),
+            headers={"Content-Type": "application/json"}
+        )
 
 # --- Closing cursor for APPUSER
 
