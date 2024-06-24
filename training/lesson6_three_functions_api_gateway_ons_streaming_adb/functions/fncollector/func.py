@@ -193,7 +193,7 @@ def handler(ctx, data: io.BytesIO = None):
             group_name=group_name,
             instance_name=instance_name,
             type=oci.streaming.models.CreateGroupCursorDetails.TYPE_LATEST,
-            commit_on_get=True
+            commit_on_get=False
         )
         cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
         stream_cursor = cursor_response.data.value
@@ -294,12 +294,6 @@ def handler(ctx, data: io.BytesIO = None):
                 if DEBUG_MODE:
                     logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
 
-            # use the next-cursor for iteration
-            cursor_response = get_messages_response.headers["opc-next-cursor"]    
-
-            if DEBUG_MODE:
-                logging.getLogger().info(f'Setting next cursor in the stream.')
-
         except Exception as ex:
             logging.getLogger().error(f'Error inserting data into IOT_DATA table: {ex}')
             logging.getLogger().info(f'Leaving handler w/errors')
@@ -311,6 +305,26 @@ def handler(ctx, data: io.BytesIO = None):
                                         ,'exception'  : str(ex)}, indent=2),
                 headers={"Content-Type": "application/json"}
             )
+
+# --- Closing stream cursor manually
+
+    try:   
+        consumer_commit_response = streamClient.consumer_commit(stream_ocid, stream_cursor)    
+
+        if DEBUG_MODE:
+            logging.getLogger().info(f'Closing stream cursor manually: {consumer_commit_response.data}.')
+
+    except Exception as ex:
+        logging.getLogger().error(f'Error closing stream cursor manually: {ex}')
+        logging.getLogger().info(f'Leaving handler w/errors')
+
+        return response.Response(
+            ctx,
+            response_data=json.dumps({'status'     : 1
+                                    ,'step'       : 'Closing stream cursor manually'
+                                    ,'exception'  : str(ex)}, indent=2),
+            headers={"Content-Type": "application/json"}
+        )
 
 # --- Closing cursor for APPUSER
 
