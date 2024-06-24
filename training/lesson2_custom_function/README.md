@@ -578,7 +578,7 @@ Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 
 ![](terraform-oci-fk-function-lesson2e.png)
 
-5. Confirm existence of Docker registry with fkcustom docker image:
+6. Confirm existence of Docker registry with fkcustom docker image:
 
 ![](terraform-oci-fk-function-lesson2f.png)
 
