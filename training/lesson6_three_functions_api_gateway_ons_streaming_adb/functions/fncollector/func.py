@@ -197,7 +197,7 @@ def handler(ctx, data: io.BytesIO = None):
         )
         cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
         stream_cursor = cursor_response.data.value
-
+gi
         get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor, limit=10)
 
         if DEBUG_MODE:
