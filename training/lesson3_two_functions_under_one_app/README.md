@@ -804,7 +804,6 @@ Do you really want to destroy all resources?
 
 Destroy complete! Resources: 16 destroyed.
 
-```
 module.oci-fk-custom-function-1.null_resource.FoggyKitchenFnInvoke[0]: Destroying... [id=1802697844876187448]
 module.oci-fk-custom-function-2.null_resource.FoggyKitchenFnInvoke[0]: Destroying... [id=3487679343069449311]
 module.oci-fk-custom-function-1.null_resource.FoggyKitchenFnInvoke[0]: Destruction complete after 0s
