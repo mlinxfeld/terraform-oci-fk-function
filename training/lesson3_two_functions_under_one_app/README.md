@@ -5,7 +5,7 @@
 
 In this third lesson, we will create two functions, `fncustom1` and `fncustom2`, both placed under a single application umbrella. These functions will use the same public subnet. While most of the function code will be identical, each function will have a different `FN_CUSTOM_MESSAGE` value to generate unique content.
 
-Since the application is shared, we will need to manually create the network elements and inject them into the module. The first invocation of the module will generate the application itself, so we will need to retrieve the application OCID from the first module's output and inject it into the second module. This allows the application to be shared between the functions.
+Since the application is shared, we will need to manually create the network elements and inject them into both modules (fncustom1 and fncustom2). The first invocation of the module for fncustom1 will generate the application itself, so we will need to retrieve the application OCID from the first module's output and inject it into the second module for fncustom2. This allows the application to be shared between the functions.
 
 ![](terraform-oci-fk-function-lesson3.png)
 
