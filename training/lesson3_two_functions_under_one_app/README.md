@@ -732,23 +732,23 @@ Apply complete! Resources: 24 added, 0 changed, 0 destroyed.
 
 ![](terraform-oci-fk-function-lesson3a.png)
 
-2. Verify existence of the fkapp application and then fkcustom1 and fkcustom2 functions:
+2. Verify existence of the `fkapp` application and then `fkcustom1` and `fkcustom2` functions:
 
 ![](terraform-oci-fk-function-lesson3b.png)
 
-3. Confirm that fkcustom1 has been invoked in the metrics section:
+3. Confirm that `fkcustom1` has been invoked in the metrics section:
 
 ![](terraform-oci-fk-function-lesson3c1.png)
 
-4. Confirm that fkcustom2 has been invoked in the metrics section:
+4. Confirm that `fkcustom2` has been invoked in the metrics section:
 
 ![](terraform-oci-fk-function-lesson3c2.png)
 
-5. Confirm that custom message has been injected as part of configuration to fncustom1 - environmetal variable `FN_CUSTOM_MESSAGE`:
+5. Confirm that custom message has been injected as part of configuration to `fncustom1` - environmetal variable `FN_CUSTOM_MESSAGE`:
 
 ![](terraform-oci-fk-function-lesson3d1.png)
 
-6. Confirm that custom message has been injected as part of configuration to fncustom2 - environmetal variable `FN_CUSTOM_MESSAGE`:
+6. Confirm that custom message has been injected as part of configuration to `fncustom2` - environmetal variable `FN_CUSTOM_MESSAGE`:
 
 ![](terraform-oci-fk-function-lesson3d2.png)
 

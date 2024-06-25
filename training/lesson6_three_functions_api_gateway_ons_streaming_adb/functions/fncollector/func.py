@@ -192,12 +192,12 @@ def handler(ctx, data: io.BytesIO = None):
         cursor_details = oci.streaming.models.CreateGroupCursorDetails(
             group_name=group_name,
             instance_name=instance_name,
-            type=oci.streaming.models.CreateGroupCursorDetails.TYPE_LATEST,
+            type=oci.streaming.models.CreateGroupCursorDetails.TYPE_TRIM_HORIZON,
             commit_on_get=False
         )
         cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
         stream_cursor = cursor_response.data.value
-gi
+
         get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor, limit=10)
 
         if DEBUG_MODE:

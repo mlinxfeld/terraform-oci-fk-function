@@ -564,11 +564,11 @@ Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 
 ![](terraform-oci-fk-function-lesson2a.png)
 
-2. Verify existence of the fkapp application and fkcustom function:
+2. Verify existence of the `fkapp` application and `fkcustom` function:
 
 ![](terraform-oci-fk-function-lesson2b.png)
 
-3. Confirm that fkcustom has been invoked in the metrics section:
+3. Confirm that `fkcustom` has been invoked in the metrics section:
 
 ![](terraform-oci-fk-function-lesson2c.png)
 

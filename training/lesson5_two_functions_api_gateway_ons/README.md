@@ -175,7 +175,7 @@ api_gateway_endpoints = {
 
 ### Check the function in OCI Console
 
-1. With Postman execute POST message to fnintiator via API Gateway endpoint:
+1. With Postman execute POST message to `fnintiator` via API Gateway endpoint:
 
 ![](terraform-oci-fk-function-lesson5a.png)
 
@@ -183,7 +183,7 @@ api_gateway_endpoints = {
 
 ![](terraform-oci-fk-function-lesson5b.png)
 
-3. In the logs find logs for invocation of fninitiator and later on fncollector functions:
+3. In the logs find logs for invocation of `fninitiator` and later on `fncollector` functions:
 
 ![](terraform-oci-fk-function-lesson5c.png)
 

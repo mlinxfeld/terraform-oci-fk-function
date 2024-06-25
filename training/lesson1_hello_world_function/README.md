@@ -415,7 +415,7 @@ Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 ![](terraform-oci-fk-function-lesson1a.png)
 
-2. Verify existence of the fkapp application and fkfn function:
+2. Verify existence of the `fkapp` application and `fkfn` function:
 
 ![](terraform-oci-fk-function-lesson1b.png)
 
@@ -427,7 +427,7 @@ Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 ![](terraform-oci-fk-function-lesson1d.png)
 
-5. Confirm existence of Docker registry with fkfn docker image:
+5. Confirm existence of Docker registry with `fkfn` docker image:
 
 ![](terraform-oci-fk-function-lesson1e.png)
 

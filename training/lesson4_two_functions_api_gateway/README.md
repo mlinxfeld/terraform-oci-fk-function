@@ -186,11 +186,11 @@ api_gateway_endpoints = {
 
 ### Check the function in OCI Console
 
-1. With Postman test accessibility of the fncustom1 function via API Gateway endpoint:
+1. With Postman test accessibility of the `fncustom1` function via API Gateway endpoint:
 
 ![](terraform-oci-fk-function-lesson4a.png)
 
-2. With Postman test accessibility of the fncustom2 function via API Gateway endpoint:
+2. With Postman test accessibility of the `fncustom2` function via API Gateway endpoint:
 
 ![](terraform-oci-fk-function-lesson4b.png)
 
@@ -202,11 +202,11 @@ api_gateway_endpoints = {
 
 ![](terraform-oci-fk-function-lesson4d.png)
 
-5. Confirm that fkcustom1 has been invoked in the metrics section:
+5. Confirm that `fkcustom1` has been invoked in the metrics section:
 
 ![](terraform-oci-fk-function-lesson4e.png)
 
-6. Confirm that fkcustom2 has been invoked in the metrics section:
+6. Confirm that `fkcustom2` has been invoked in the metrics section:
 
 ![](terraform-oci-fk-function-lesson4f.png)
 
