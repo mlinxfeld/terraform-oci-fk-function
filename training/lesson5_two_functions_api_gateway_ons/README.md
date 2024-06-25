@@ -3,7 +3,7 @@
 
 ## LESSON 5 - Two Functions, API Gateway and ONS
 
-In this fourth lesson, we will delve into creating an advanced event-driven architecture with two functions, `fninititor` and `fncollector`, both residing in a private subnet. This architecture demonstrates how to efficiently manage asynchronous processes and enhance scalability.
+In this fifth lesson, we will delve into creating an advanced event-driven architecture with two functions, `fninititor` and `fncollector`, both residing in a private subnet. This architecture demonstrates how to efficiently manage asynchronous processes and enhance scalability.
 
 The first function, `fninititor`, will be exposed to the public Internet via an API Gateway. This means you will invoke `fninititor` using an endpoint provided by the API Gateway, ensuring secure and controlled access. Each invocation of `fninititor` will send a message to the OCI Notification Service (ONS), leveraging the capabilities of ONS to handle notifications efficiently.
 
