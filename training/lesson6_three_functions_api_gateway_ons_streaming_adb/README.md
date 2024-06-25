@@ -192,7 +192,7 @@ api_gateway_endpoints = {
 
 ![](terraform-oci-fk-function-lesson6c.png)
 
-4. With Postman execute POST message to fnintiator via API Gateway endpoint (include IOT data in form of JSON):
+4. With Postman execute POST message to `fnintiator` via API Gateway endpoint (include IOT data in form of JSON):
 
 ![](terraform-oci-fk-function-lesson6d.png)
 
