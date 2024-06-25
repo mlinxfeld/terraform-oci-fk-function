@@ -3,7 +3,8 @@
 
 ## LESSON 6 - Three Functions, API Gateway, ONS, Streaming and ADB-S
 
-In this sixth lesson, we will enhance our event-driven architecture by incorporating additional components, such as the Streaming Service. The `fninitiator` function will continue to call the OCI Notification Service (ONS) with a message, and the subscription to the topic by the `fncollector` function will trigger its execution. Additionally, `fninitiator` will publish messages to the stream, which `fncollector` will consume.Subsequently, `fncollector` will interact with the Autonomous Database Serverless FreeTier (ADB-S), where IoT records will be saved in an `IOT_TABLE` table. In addition to the two functions you are already familiar with, we will introduce a helper function named `fnadbsetup`, which will be invoked by Terraform code. This helper function will create an `APPUSER` in ADB-S and populate the `IOT_TABLE` with initial data.
+In this sixth lesson, we will enhance our event-driven architecture by incorporating additional components, such as the Streaming Service. The `fninitiator` function will continue to call the OCI Notification Service (ONS) with a message, and the subscription to the topic by the `fncollector` function will trigger its execution. Additionally, `fninitiator` will publish messages to the stream, which `fncollector` will consume. 
+Subsequently, `fncollector` will interact with the Autonomous Database Serverless FreeTier (ADB-S), where IoT records will be saved in an `IOT_TABLE` table. In addition to the two functions you are already familiar with, we will introduce a helper function named `fnadbsetup`, which will be invoked by Terraform code. This helper function will create an `APPUSER` in ADB-S and populate the `IOT_TABLE` with initial data.
 
 This lesson will provide a comprehensive understanding of integrating the Streaming Service and Autonomous Database with your event-driven architecture, further expanding your ability to manage and process data efficiently in a serverless environment.
 
@@ -213,7 +214,7 @@ api_gateway_endpoints = {
 Run the following command for destroying all resources:
 
 ```
-martin_lin@codeeditor:lesson6_three_functions_api_gateway_ons_streaming_adb (eu-frankfurt-1)$ terraform destroy 
+martin_lin@codeeditor:lesson6_three_functions_api_gateway_ons_streaming_adb (eu-fankfurt-1)$ terraform destroy 
 data.local_file.fninitiator_dockerfile: Reading...
 data.local_file.fninitiator_requirements_txt: Reading...
 data.local_file.fninitiator_func_yaml: Reading...
