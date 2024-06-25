@@ -1,0 +1,6 @@
+tenancy_ocid = "<tenancy_ocid>"
+region = "eu-frankfurt-1"
+compartment_ocid = "<compartment_ocid>"
+ocir_user_name = "<user_name>"
+ocir_user_password = "<user_auth_token>"
+
