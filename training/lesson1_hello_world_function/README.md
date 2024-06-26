@@ -409,25 +409,25 @@ module.oci-fk-hello-world-function.null_resource.FoggyKitchenFnInvoke[0]: Creati
 Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 ```
-### Check the function in OCI Console
+### Validate the deployment
 
-1. From the hamburger menu in the top left corner navigate to Developer Services and then to Applications:
+1. From the hamburger menu in the top left corner, navigate to Developer Services, and then select Applications:
 
 ![](terraform-oci-fk-function-lesson1a.png)
 
-2. Verify existence of the `fkapp` application and `fkfn` function:
+2. Verify the existence of the fkapp application and the `fkfn` function:
 
 ![](terraform-oci-fk-function-lesson1b.png)
 
-3. Confirm that fkfn has been invoked in the metrics section:
+3. Confirm that `fkfn` has been invoked by checking the metrics section:
 
 ![](terraform-oci-fk-function-lesson1c.png)
 
-4. Navigate further into Developer Services and Container Registry:
+4. Continue navigating into Developer Services and select Container Registry:
 
 ![](terraform-oci-fk-function-lesson1d.png)
 
-5. Confirm existence of Docker registry with `fkfn` docker image:
+5. Confirm the existence of the Docker registry containing the `fkfn` Docker image:
 
 ![](terraform-oci-fk-function-lesson1e.png)
 
