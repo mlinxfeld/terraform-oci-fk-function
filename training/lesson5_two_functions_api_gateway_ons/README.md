@@ -16,7 +16,7 @@ We will utilize OCI logging to track and visualize this workflow, providing clea
 
 This architecture lays a strong foundation for more complex workflows and integrations, which will be explored in further lessons. By the end of this lesson, you will have a robust understanding of building scalable, event-driven systems using OCI services.
 
-![](terraform-oci-fk-function-lesson5.png)
+![](images/terraform-oci-fk-function-lesson5.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -175,25 +175,25 @@ api_gateway_endpoints = {
 
 ### Check the function in OCI Console
 
-1. With Postman execute POST message to `fnintiator` via API Gateway endpoint:
+1. Use Postman to execute a POST request to the `fninitiator` function through the API Gateway endpoint:
 
-![](terraform-oci-fk-function-lesson5a.png)
+![](images/terraform-oci-fk-function-lesson5a.png)
 
-2. Find the OCI Logging Service logs for the Application and Functions:
+2. Locate the OCI Logging Service logs for the application and functions:
 
-![](terraform-oci-fk-function-lesson5b.png)
+![](images/terraform-oci-fk-function-lesson5b.png)
 
-3. In the logs find logs for invocation of `fninitiator` and later on `fncollector` functions:
+3. In the logs, locate the entries for the invocation of the `fninitiator` function, followed by the entries for the `fncollector` function:
 
-![](terraform-oci-fk-function-lesson5c.png)
+![](images/terraform-oci-fk-function-lesson5c.png)
 
-4. From the hamburger menu in the top left corner navigate to Developer Services and then to Notifications:
+4. From the hamburger menu in the top left corner, navigate to **Developer Services** and then select **Notifications**:
 
-![](terraform-oci-fk-function-lesson5d.png)
+![](images/terraform-oci-fk-function-lesson5d.png)
 
-5. Confirm that for ONS Topic message has been sent:
+5. Confirm that a message has been sent for the ONS Topic:
 
-![](terraform-oci-fk-function-lesson5e.png)
+![](images/terraform-oci-fk-function-lesson5e.png)
 
 ### Destroy the changes 
 
