@@ -173,7 +173,7 @@ api_gateway_endpoints = {
 
 ```
 
-### Check the function in OCI Console
+### Validate the deployment
 
 1. Use Postman to execute a POST request to the `fninitiator` function through the API Gateway endpoint:
 
