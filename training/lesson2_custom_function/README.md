@@ -558,7 +558,7 @@ module.oci-fk-custom-function.null_resource.FoggyKitchenFnInvoke[0]: Creation co
 Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 
 ```
-### Check the function in OCI Console
+### Validate the deployment
 
 1. From the hamburger menu in the top left corner, navigate to **Developer Services**, and then select **Applications**:
 
