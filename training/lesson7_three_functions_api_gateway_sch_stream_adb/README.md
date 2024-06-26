@@ -9,7 +9,7 @@ By using the Service Connector Hub, we can significantly simplify the `fncollect
 
 This lesson will give you a deeper understanding of how to leverage OCI's advanced services to build a more efficient and resilient event-driven architecture, improving both performance and maintainability.
 
-![](terraform-oci-fk-function-lesson7.png)
+![](images/terraform-oci-fk-function-lesson7.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -166,23 +166,23 @@ Apply complete! Resources: 48 added, 0 changed, 0 destroyed.
 
 ```
 
-### Check the function in OCI Console
+### Validate the deployment
 
-1. With Postman execute POST message to `fnintiator` via API Gateway endpoint (include IOT data in form of JSON):
+1. Use Postman to execute a POST request to the `fninitiator` function via the API Gateway endpoint, including IoT data in JSON format:
 
-![](terraform-oci-fk-function-lesson7a.png)
+![](images/terraform-oci-fk-function-lesson7a.png)
 
-2. From the hamburger menu in the top left corner navigate to Analytics & AI and then to Messaging / Connector Hub:
+2. From the hamburger menu in the top left corner, navigate to **Analytics & AI**, and then select **Messaging / Connector Hub**:
 
-![](terraform-oci-fk-function-lesson7b.png)
+![](images/terraform-oci-fk-function-lesson7b.png)
 
-3. Confirm that Service Connector Hub has been used (check the Metrics):
+3. CConfirm that the Service Connector Hub has been used by checking the Metrics section:
 
-![](terraform-oci-fk-function-lesson7c.png)
+![](images/terraform-oci-fk-function-lesson7c.png)
 
-4. Select from APPUSER.IOT_DATA table to confirm that `fncollector` was successful with the insert:
+4. Run a SQL query to select data from the `APPUSER.IOT_DATA` table to confirm that `fncollector` was successful with the insert:
 
-![](terraform-oci-fk-function-lesson7d.png)
+![](images/terraform-oci-fk-function-lesson7d.png)
 
 ### Destroy the changes 
 
