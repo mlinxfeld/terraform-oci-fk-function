@@ -7,6 +7,8 @@ In this third lesson, we will create two functions, `fncustom1` and `fncustom2`,
 
 Since the application is shared, we will need to manually create the network elements and inject them into both modules (fncustom1 and fncustom2). The first invocation of the module for fncustom1 will generate the application itself, so we will need to retrieve the application OCID from the first module's output and inject it into the second module for fncustom2. This allows the application to be shared between the functions.
 
+Additionally, both functions will be invoked by Terraform code, ensuring automated and consistent deployment of the functions within the shared application environment.
+
 ![](images/terraform-oci-fk-function-lesson3.png)
 
 ## Deploy Using Oracle Resource Manager
