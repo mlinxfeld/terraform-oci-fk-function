@@ -415,7 +415,7 @@ Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 ![](images/terraform-oci-fk-function-lesson1a.png)
 
-2. Verify the existence of the fkapp application and the `fkfn` function:
+2. Verify the existence of the `fkapp` application and the `fkfn` function:
 
 ![](images/terraform-oci-fk-function-lesson1b.png)
 

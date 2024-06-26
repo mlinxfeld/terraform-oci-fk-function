@@ -12,7 +12,7 @@ In this second lesson, we will create a custom function named `fncustom`. We wil
 
 Additionally, we will inject a custom message that the function will respond with when invoked at the end of the Terraform deployment.
 
-![](terraform-oci-fk-function-lesson2.png)
+![](images/terraform-oci-fk-function-lesson2.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -560,29 +560,29 @@ Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 ```
 ### Check the function in OCI Console
 
-1. From the hamburger menu in the top left corner navigate to Developer Services and then to Applications:
+1. From the hamburger menu in the top left corner, navigate to Developer Services, and then select Applications:
 
-![](terraform-oci-fk-function-lesson2a.png)
+![](images/terraform-oci-fk-function-lesson2a.png)
 
-2. Verify existence of the `fkapp` application and `fkcustom` function:
+2. Verify the existence of the `fkapp` application and the `fkcustom` function:
 
-![](terraform-oci-fk-function-lesson2b.png)
+![](images/terraform-oci-fk-function-lesson2b.png)
 
-3. Confirm that `fkcustom` has been invoked in the metrics section:
+3. Confirm that `fkcustom` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson2c.png)
+![](images/terraform-oci-fk-function-lesson2c.png)
 
-4. Confirm that custom message has been injected as part of configuration - environmetal variable `FN_CUSTOM_MESSAGE`:
+4. Confirm that the custom message has been injected as part of the configuration by checking the environmental variable `FN_CUSTOM_MESSAGE`:
 
-![](terraform-oci-fk-function-lesson2d.png)
+![](images/terraform-oci-fk-function-lesson2d.png)
 
-5. Navigate further into Developer Services and Container Registry:
+5. Continue navigating to Developer Services and then to Container Registry:
 
-![](terraform-oci-fk-function-lesson2e.png)
+![](images/terraform-oci-fk-function-lesson2e.png)
 
-6. Confirm existence of Docker registry with fkcustom docker image:
+6. Confirm the existence of the Docker registry containing the `fkcustom` Docker image:
 
-![](terraform-oci-fk-function-lesson2f.png)
+![](images/terraform-oci-fk-function-lesson2f.png)
 
 ### Destroy the changes 
 
