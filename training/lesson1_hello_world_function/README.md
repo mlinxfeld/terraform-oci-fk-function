@@ -7,7 +7,7 @@ This lesson guides you through creating a "Hello World" function named `fkfn`. T
 
 Before deploying the application and function, the function code will be built (dockerized) and published in the OCI Container Registry. From there, the function will be deployed. Ultimately, the module will automatically invoke the function using the `oci raw-request --http-method POST` command, and we will see the "Hello World" response from the function.
 
-![](terraform-oci-fk-function-lesson1.png)
+![](images/terraform-oci-fk-function-lesson1.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -413,23 +413,23 @@ Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 1. From the hamburger menu in the top left corner, navigate to Developer Services, and then select Applications:
 
-![](terraform-oci-fk-function-lesson1a.png)
+![](images/terraform-oci-fk-function-lesson1a.png)
 
 2. Verify the existence of the fkapp application and the `fkfn` function:
 
-![](terraform-oci-fk-function-lesson1b.png)
+![](images/terraform-oci-fk-function-lesson1b.png)
 
 3. Confirm that `fkfn` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson1c.png)
+![](images/terraform-oci-fk-function-lesson1c.png)
 
 4. Continue navigating into Developer Services and select Container Registry:
 
-![](terraform-oci-fk-function-lesson1d.png)
+![](images/terraform-oci-fk-function-lesson1d.png)
 
 5. Confirm the existence of the Docker registry containing the `fkfn` Docker image:
 
-![](terraform-oci-fk-function-lesson1e.png)
+![](images/terraform-oci-fk-function-lesson1e.png)
 
 ### Destroy the changes 
 
