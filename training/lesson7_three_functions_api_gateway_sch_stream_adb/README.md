@@ -176,7 +176,7 @@ Apply complete! Resources: 48 added, 0 changed, 0 destroyed.
 
 ![](images/terraform-oci-fk-function-lesson7b.png)
 
-3. CConfirm that the Service Connector Hub has been used by checking the Metrics section:
+3. Confirm that the Service Connector Hub has been used by checking the Metrics section:
 
 ![](images/terraform-oci-fk-function-lesson7c.png)
 
