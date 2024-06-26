@@ -7,7 +7,7 @@ In this fourth lesson, we will create two functions, `fncustom1` and `fncustom2`
 
 To facilitate this setup, we will implement an IAM policy that grants the necessary permissions for the API Gateway to access and invoke the functions. This ensures that only authorized requests can reach the functions, enhancing the overall security posture of our deployment. By the end of this lesson, you will have a secure, efficient means of exposing private functions to the public Internet using the API Gateway.
 
-![](terraform-oci-fk-function-lesson4.png)
+![](images/terraform-oci-fk-function-lesson4.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -184,31 +184,31 @@ api_gateway_endpoints = {
 }
 ```
 
-### Check the function in OCI Console
+### Validate the deployment
 
-1. With Postman test accessibility of the `fncustom1` function via API Gateway endpoint:
+1. Use Postman to test the accessibility of the `fncustom1` function through the API Gateway endpoint:
 
-![](terraform-oci-fk-function-lesson4a.png)
+![](images/terraform-oci-fk-function-lesson4a.png)
 
-2. With Postman test accessibility of the `fncustom2` function via API Gateway endpoint:
+2. Use Postman to test the accessibility of the `fncustom2` function through the API Gateway endpoint:
 
-![](terraform-oci-fk-function-lesson4b.png)
+![](images/terraform-oci-fk-function-lesson4b.png)
 
-3. From the hamburger menu in the top left corner navigate to Developer Services and then to Gateways:
+3. From the hamburger menu in the top left corner, navigate to **Developer Services** and then select **Gateways**:
 
-![](terraform-oci-fk-function-lesson4c.png)
+![](images/terraform-oci-fk-function-lesson4c.png)
 
-4. Confirm that API Gateway has been invoked
+4. Confirm that the API Gateway has been invoked:
 
-![](terraform-oci-fk-function-lesson4d.png)
+![](images/erraform-oci-fk-function-lesson4d.png)
 
-5. Confirm that `fkcustom1` has been invoked in the metrics section:
+5. Confirm that `fkcustom1` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson4e.png)
+![](images/terraform-oci-fk-function-lesson4e.png)
 
-6. Confirm that `fkcustom2` has been invoked in the metrics section:
+6. Confirm that `fkcustom2` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson4f.png)
+![](images/terraform-oci-fk-function-lesson4f.png)
 
 ### Destroy the changes 
 
