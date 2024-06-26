@@ -200,7 +200,7 @@ api_gateway_endpoints = {
 
 4. Confirm that the API Gateway has been invoked:
 
-![](images/erraform-oci-fk-function-lesson4d.png)
+![](images/terraform-oci-fk-function-lesson4d.png)
 
 5. Confirm that `fkcustom1` has been invoked by checking the metrics section:
 
