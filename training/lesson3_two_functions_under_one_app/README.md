@@ -7,7 +7,7 @@ In this third lesson, we will create two functions, `fncustom1` and `fncustom2`,
 
 Since the application is shared, we will need to manually create the network elements and inject them into both modules (fncustom1 and fncustom2). The first invocation of the module for fncustom1 will generate the application itself, so we will need to retrieve the application OCID from the first module's output and inject it into the second module for fncustom2. This allows the application to be shared between the functions.
 
-![](terraform-oci-fk-function-lesson3.png)
+![](images/terraform-oci-fk-function-lesson3.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -728,29 +728,29 @@ Apply complete! Resources: 24 added, 0 changed, 0 destroyed.
 ```
 ### Check the function in OCI Console
 
-1. From the hamburger menu in the top left corner navigate to Developer Services and then to Applications:
+1. From the hamburger menu in the top left corner, navigate to **Developer Services**, then select **Applications**:
 
-![](terraform-oci-fk-function-lesson3a.png)
+![](images/terraform-oci-fk-function-lesson3a.png)
 
-2. Verify existence of the `fkapp` application and then `fkcustom1` and `fkcustom2` functions:
+2. Verify the existence of the `fkapp` application, then check for the `fkcustom1` and `fkcustom2` functions:
 
-![](terraform-oci-fk-function-lesson3b.png)
+![](images/terraform-oci-fk-function-lesson3b.png)
 
-3. Confirm that `fkcustom1` has been invoked in the metrics section:
+3. Confirm that `fkcustom1` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson3c1.png)
+![](images/terraform-oci-fk-function-lesson3c1.png)
 
-4. Confirm that `fkcustom2` has been invoked in the metrics section:
+4. Confirm that `fkcustom2` has been invoked by checking the metrics section:
 
-![](terraform-oci-fk-function-lesson3c2.png)
+![](images/terraform-oci-fk-function-lesson3c2.png)
 
-5. Confirm that custom message has been injected as part of configuration to `fncustom1` - environmetal variable `FN_CUSTOM_MESSAGE`:
+5. Confirm that the custom message has been injected into `fncustom1` as part of the configuration by checking the environmental variable `FN_CUSTOM_MESSAGE`:
 
-![](terraform-oci-fk-function-lesson3d1.png)
+![](images/terraform-oci-fk-function-lesson3d1.png)
 
-6. Confirm that custom message has been injected as part of configuration to `fncustom2` - environmetal variable `FN_CUSTOM_MESSAGE`:
+6. Confirm that the custom message has been injected into `fncustom2` as part of the configuration by checking the environmental variable `FN_CUSTOM_MESSAGE`:
 
-![](terraform-oci-fk-function-lesson3d2.png)
+![](images/terraform-oci-fk-function-lesson3d2.png)
 
 ### Destroy the changes 
 

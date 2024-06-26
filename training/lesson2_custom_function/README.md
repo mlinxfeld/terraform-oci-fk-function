@@ -560,7 +560,7 @@ Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 ```
 ### Check the function in OCI Console
 
-1. From the hamburger menu in the top left corner, navigate to Developer Services, and then select Applications:
+1. From the hamburger menu in the top left corner, navigate to **Developer Services**, and then select **Applications**:
 
 ![](images/terraform-oci-fk-function-lesson2a.png)
 
@@ -576,7 +576,7 @@ Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
 
 ![](images/terraform-oci-fk-function-lesson2d.png)
 
-5. Continue navigating to Developer Services and then to Container Registry:
+5. Continue navigating to **Developer Services** and then to **Container Registry**:
 
 ![](images/terraform-oci-fk-function-lesson2e.png)
 
