@@ -18,7 +18,7 @@ Instead of figuring out the details of how to run a piece of infrastructure from
 ## How to use this Module
 Each Module has the following folder structure:
 * [root](): This folder contains a root module.
-* [training](): This folder contains self-study training how to use the module: 
+* [training](training): This folder contains self-study training how to use the module.
     
 To deploy function using this Module with minimal effort use this:
 
