@@ -8,7 +8,7 @@ Subsequently, `fncollector` will interact with the Autonomous Database Serverles
 
 This lesson will provide a comprehensive understanding of integrating the Streaming Service and Autonomous Database with your event-driven architecture, further expanding your ability to manage and process data efficiently in a serverless environment.
 
-![](terraform-oci-fk-function-lesson6.png)
+![](images/terraform-oci-fk-function-lesson6.png)
 
 ## Deploy Using Oracle Resource Manager
 
@@ -179,35 +179,35 @@ api_gateway_endpoints = {
 }
 ```
 
-### Check the function in OCI Console
+### Validate the deployment
 
-1. From the hamburger menu in the top left corner navigate to Oracle Database and then to Autonomous Database:
+1. From the hamburger menu in the top left corner, navigate to **Oracle Database** and then select **Autonomous Database**:
 
-![](terraform-oci-fk-function-lesson6a.png)
+![](images/terraform-oci-fk-function-lesson6a.png)
 
-2. For Autonomous Database start SQL from Database Actions:
+2. For Autonomous Database, start **SQL** from **Database Actions**:
 
-![](terraform-oci-fk-function-lesson6b.png)
+![](images/terraform-oci-fk-function-lesson6b.png)
 
-3. Select from APPUSER.IOT_DATA table to confirm that `fnadbsetup` was successful:
+3. Run a SQL query to select data from the `APPUSER.IOT_DATA` table to confirm that `fnadbsetup` was successful:
 
-![](terraform-oci-fk-function-lesson6c.png)
+![](images/terraform-oci-fk-function-lesson6c.png)
 
-4. With Postman execute POST message to `fnintiator` via API Gateway endpoint (include IOT data in form of JSON):
+4. Use Postman to execute a POST request to the `fninitiator` function via the API Gateway endpoint, including IoT data in JSON format:
 
-![](terraform-oci-fk-function-lesson6d.png)
+![](images/terraform-oci-fk-function-lesson6d.png)
 
-5. In the logs find logs for invocation of `fninitiator` function:
+5. In the logs, locate the entries for the invocation of the `fninitiator` function:
 
-![](terraform-oci-fk-function-lesson6e.png)
+![](images/terraform-oci-fk-function-lesson6e.png)
 
-6. In the logs find logs for invocation of `fncollector` function:
+6. In the logs, locate the entries for the invocation of the `fncollector` function:
 
-![](terraform-oci-fk-function-lesson6f.png)
+![](images/terraform-oci-fk-function-lesson6f.png)
 
-7. Select again from APPUSER.IOT_DATA table to confirm that `fncollector` was successful with the insert:
+7. Run a SQL query to select data from the `APPUSER.IOT_DATA` table again to confirm that `fncollector` was successful with the insert:
 
-![](terraform-oci-fk-function-lesson6g.png)
+![](images/terraform-oci-fk-function-lesson6g.png)
 
 ### Destroy the changes 
 
