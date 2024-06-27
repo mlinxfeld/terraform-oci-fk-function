@@ -66,3 +66,8 @@ In this seventh lesson, we will enhance our event-driven architecture by replaci
 By using the Service Connector Hub, we can significantly simplify the `fncollector` function, as the hub will manage the data flow from the stream to the function. This modification not only streamlines the function but also enhances the overall reliability and efficiency of the system. The Service Connector Hub provides a more robust and scalable solution, ensuring that our architecture is better equipped to handle increased loads and complex workflows.
 
 This lesson will give you a deeper understanding of how to leverage OCI's advanced services to build a more efficient and resilient event-driven architecture, improving both performance and maintainability.
+
+[Lesson 8: Four Functions, API Gateway with JWT Token Auth, Service Connector Hub, Streaming and ADB-S](lesson8_four_functions_api_gateway_jwt_sch_stream_adb)
+
+In this eighth lesson, we will enhance the security of our event-driven architecture by adding a new function called `fnjwtauth`. This function will be responsible for validating the JSON Web Token (JWT) passed in the header of the POST request to `fninitiator`. The API Gateway Deployment will be configured to invoke the `fnjwtauth` function for JWT token validation. If the token is missing or invalid, the `fninitiator` function will not be invoked, and the API Gateway will return a 401 Unauthorized response. If the token is valid, our workflow will proceed, and the IoT data will be placed in the Streaming service.
+
