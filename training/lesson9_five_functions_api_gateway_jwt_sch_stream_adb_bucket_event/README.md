@@ -3,7 +3,7 @@
 
 ## LESSON 9 - Five Functions, API Gateway with JWT Token Auth, Service Connector Hub, Streaming, ADB-S, OSS Bucket and Event Services
 
-In this ninth lesson, we will introduce a new function named `fnbulkload`. This function will be automatically triggered by an OCI Event emitted when a new file is uploaded to an Object Storage Bucket. The function will access the Bucket and read the uploaded file. We will upload the [devices.json](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/devices.json) file from the [examples](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/) subdirectory, which contains an array of device data. The `fnbulkload` function will extract all the records from the file and put them into the stream. The rest of the workflow will deliver these records into ATP-S using the Service Connector Hub and the `fncollector` function. This setup provides us with two channels for uploading data into the database: one channel via API Gateway for posting singular measurements, and the second one for bulk loading via JSON files uploaded to the OSS bucket.
+In this ninth lesson, we will introduce a new function named `fnbulkload`. This function will be automatically triggered by an OCI Event emitted when a new file is uploaded to an Object Storage Bucket. The function will access the Bucket and read the uploaded file. We will upload the [devices.json](examples/devices.json) file from the [examples](examples/) subdirectory, which contains an array of device data. The `fnbulkload` function will extract all the records from the file and put them into the stream. The rest of the workflow will deliver these records into ATP-S using the Service Connector Hub and the `fncollector` function. This setup provides us with two channels for uploading data into the database: one channel via API Gateway for posting singular measurements, and the second one for bulk loading via JSON files uploaded to the OSS bucket.
 
 ![](images/terraform-oci-fk-function-lesson9.png)
 
@@ -195,7 +195,7 @@ fn_jwt_token = "ABCD1234"
 
 ### Validate the deployment
 
-1. Upload [devices.json](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/devices.json) file into OSS Bucket:
+1. Upload [devices.json](/examples/devices.json) file into OSS Bucket:
 
 ![](images/terraform-oci-fk-function-lesson9a.png)
 
