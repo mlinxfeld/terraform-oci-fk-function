@@ -1,15 +1,15 @@
 
 # FoggyKitchen OCI Function with Terraform 
 
-## LESSON 8 - Four Functions, API Gateway with JWT Token Auth, Service Connector Hub, Streaming and ADB-S
+## LESSON 9 - Five Functions, API Gateway with JWT Token Auth, Service Connector Hub, Streaming, ADB-S, OSS Bucket and Event Services
 
-In this eighth lesson, we will enhance the security of our event-driven architecture by adding a new function called `fnjwtauth`. This function will be responsible for validating the JSON Web Token (JWT) passed in the header of the POST request to `fninitiator`. The API Gateway Deployment will be configured to invoke the `fnjwtauth` function for JWT token validation. If the token is missing or invalid, the `fninitiator` function will not be invoked, and the API Gateway will return a 401 Unauthorized response. If the token is valid, our workflow will proceed, and the IoT data will be placed in the Streaming service.
+In this ninth lesson, we will introduce a new function named `fnbulkload`. This function will be automatically triggered by an OCI Event emitted when a new file is uploaded to an Object Storage Bucket. The function will access the Bucket and read the uploaded file. We will upload the [devices.json](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/devices.json) file from the [examples](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/) subdirectory, which contains an array of device data. The `fnbulkload` function will extract all the records from the file and put them into the stream. The rest of the workflow will deliver these records into ATP-S using the Service Connector Hub and the `fncollector` function. This setup provides us with two channels for uploading data into the database: one channel via API Gateway for posting singular measurements, and the second one for bulk loading via JSON files uploaded to the OSS bucket.
 
-![](images/terraform-oci-fk-function-lesson8.png)
+![](images/terraform-oci-fk-function-lesson9.png)
 
 ## Deploy Using Oracle Resource Manager
 
-1. Click [![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?region=home&zipUrl=https://github.com/mlinxfeld/terraform-oci-fk-function/releases/latest/download/terraform-oci-fk-function-lesson8.zip)
+1. Click [![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?region=home&zipUrl=https://github.com/mlinxfeld/terraform-oci-fk-function/releases/latest/download/terraform-oci-fk-function-lesson9.zip)
 
     If you aren't already signed in, when prompted, enter the tenancy and user credentials.
 
@@ -39,16 +39,16 @@ martin_lin@codeeditor:~ (eu-frankfurt-1)$ git clone https://github.com/mlinxfeld
 
 martin_lin@codeeditor:~ (eu-frankfurt-1)$ cd terraform-oci-fk-function
 
-martin_lin@codeeditor:terraform-oci-fk-adb (eu-frankfurt-1)$ cd training/lesson8_four_functions_api_gateway_jwt_sch_stream_adb/
+martin_lin@codeeditor:terraform-oci-fk-adb (eu-frankfurt-1)$ cd training/lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/
 ```
 
 ### Prerequisites
 Create environment file with terraform.tfvars file starting with example file:
 
 ```
-martin_lin@codeeditor:lesson8_four_functions_api_gateway_jwt_sch_stream_adb (eu-frankfurt-1)$ cp terraform.tfvars.example terraform.tfvars
+martin_lin@codeeditor:lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event (eu-frankfurt-1)$ cp terraform.tfvars.example terraform.tfvars
 
-martin_lin@codeeditor:lesson8_four_functions_api_gateway_jwt_sch_stream_adb (eu-frankfurt-1)$ vi terraform.tfvars
+martin_lin@codeeditor:lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event (eu-frankfurt-1)$ vi terraform.tfvars
 
 tenancy_ocid          = "ocid1.tenancy.oc1..<your_tenancy_ocid>"
 compartment_ocid      = "ocid1.compartment.oc1..<your_comparment_ocid>"
@@ -64,13 +64,15 @@ adb_app_user_password = "<adb_app_user_password>"
 Run the following command to initialize Terraform environment:
 
 ```
-martin_lin@codeeditor:lesson8_four_functions_api_gateway_jwt_sch_stream_adb (eu-frankfurt-1)$ terraform init 
+martin_lin@codeeditor:lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event (eu-frankfurt-1)$ terraform init 
 
 Initializing the backend...
 Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-adb.git for oci-fk-adb...
 - oci-fk-adb in .terraform/modules/oci-fk-adb
 Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-adb-setup-function...
 - oci-fk-adb-setup-function in .terraform/modules/oci-fk-adb-setup-function
+Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-bulk-load-function...
+- oci-fk-bulk-load-function in .terraform/modules/oci-fk-bulk-load-function
 Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-collector-function...
 - oci-fk-collector-function in .terraform/modules/oci-fk-collector-function
 Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-initiator-function...
@@ -107,7 +109,7 @@ commands will detect it and remind you to do so if necessary.
 Run the following command for applying changes with the proposed plan:
 
 ```
-martin_lin@codeeditor:lesson8_four_functions_api_gateway_jwt_sch_stream_adb  (eu-frankfurt-1)$ terraform apply 
+martin_lin@codeeditor:lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event (eu-frankfurt-1)$ terraform apply 
 
 data.local_file.fninitiator_dockerfile: Reading...
 data.local_file.fncollector_dockerfile: Reading...
@@ -136,7 +138,7 @@ data.local_file.fncollector_dockerfile: Reading...
       + timeout_in_seconds = 30
     }
 
-Plan: 54 to add, 0 to change, 0 to destroy.
+Plan: 64 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + api_gateway_endpoints = {
@@ -153,9 +155,33 @@ Do you want to perform these actions?
 (...)
 
 oci_sch_service_connector.FoggyKitchenServiceConnector: Creating...
-oci_sch_service_connector.FoggyKitchenServiceConnector: Creation complete after 1s [id=ocid1.serviceconnector.oc1.eu-frankfurt-1.amaaaaaadngk4gianbofhzqnexxbo7x5amzotozdnffk3g2etnbyhhftdm6q]
+oci_sch_service_connector.FoggyKitchenServiceConnector: Creation complete after 1s [id=ocid1.serviceconnector.oc1.eu-frankfurt-1.amaaaaaadngk4giagbxm35qhek4ypjgdpd3orbqv4jigzczy6ialolcdnjwa]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [20s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [30s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Provisioning with 'local-exec'...
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec): Executing: ["/bin/sh" "-c" "oci raw-request --http-method POST --target-uri https://rt3d6oipj7q.eu-frankfurt-1.functions.oci.oraclecloud.com/20181201/functions/ocid1.fnfunc.oc1.eu-frankfurt-1.aaaaaaaagckmqv6z2nvgcdiznxcsvnrjjd2ki4qlkmqhjyh2pckliwrfsvnq/actions/invoke --request-body '' "]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [40s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [50s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [1m0s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [1m10s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [1m20s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Still creating... [1m30s elapsed]
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec): {
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):   "data": "",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):   "headers": {
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Content-Length": "0",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Content-Type": "text/plain",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Date": "Fri, 28 Jun 2024 11:14:20 GMT",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Fn-Call-Id": "01J1F8SDC81BT0JF8ZJ027B14B",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Fn-Fdk-Runtime": "python/3.8.17 final",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Fn-Fdk-Version": "fdk-python/0.1.74",
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):     "Opc-Request-Id": "8C2F4CFCD95A4838B2DE7CBF13B4A622/01J1F8SD92000000000048284F/01J1F8SD92000000000048284G"
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):   },
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec):   "status": "200 OK"
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0] (local-exec): }
+module.oci-fk-adb-setup-function.null_resource.FoggyKitchenFnInvoke[0]: Creation complete after 1m35s [id=8889759373892056855]
 
-Apply complete! Resources: 54 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 64 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -169,21 +195,21 @@ fn_jwt_token = "ABCD1234"
 
 ### Validate the deployment
 
-1. Use Postman to execute a POST request to the `fninitiator` function via the API Gateway endpoint, including IoT data in JSON format. The request should fail with a 401 Unauthorized response because the JWT token has not been included in the header of the POST call.
+1. Upload [devices.json](lesson9_five_functions_api_gateway_jwt_sch_stream_adb_bucket_event/examples/devices.json) file into OSS Bucket:
 
-![](images/terraform-oci-fk-function-lesson8a.png)
+![](images/terraform-oci-fk-function-lesson9a.png)
 
-2. In the Headers tab, add `{ token = ABCD1234 }` and make another POST request to the `fninitiator` function via the API Gateway endpoint.
+2. Confirm that event has been emitted:
 
-![](images/terraform-oci-fk-function-lesson8b.png)
+![](images/terraform-oci-fk-function-lesson9b.png)
 
-3. Confirm that `fnjwtauth` has been invoked by checking the metrics section:
+3. Confirm that `fnbulkload` function has been triggered:
 
-![](images/terraform-oci-fk-function-lesson8c.png)
+![](images/terraform-oci-fk-function-lesson9c.png)
 
 4. Run a SQL query to select data from the `APPUSER.IOT_DATA` table to confirm that `fncollector` was successful with the insert:
 
-![](images/terraform-oci-fk-function-lesson8d.png)
+![](images/terraform-oci-fk-function-lesson9d.png)
 
 ### Destroy the changes 
 
@@ -228,7 +254,7 @@ data.local_file.fnjwtauth_func_yaml: Reading...
         }
     }
 
-Plan: 0 to add, 0 to change, 54 to destroy.
+Plan: 0 to add, 0 to change, 64 to destroy.
 
 Changes to Outputs:
   - api_gateway_endpoints = {
@@ -259,6 +285,6 @@ oci_core_nat_gateway.FoggyKitchenNATGateway: Destruction complete after 1s
 oci_core_virtual_network.FoggyKitchenVCN: Destroying... [id=ocid1.vcn.oc1.eu-frankfurt-1.amaaaaaadngk4gia5axoqi77nz6xpkyeedrced5kq65axoaegh44othdd6ma]
 oci_core_virtual_network.FoggyKitchenVCN: Destruction complete after 1s
 
-Destroy complete! Resources: 47 destroyed.
+Destroy complete! Resources: 64 destroyed.
 
 ```
