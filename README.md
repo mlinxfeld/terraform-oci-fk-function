@@ -72,3 +72,14 @@ oci_logging_group_name | Name of the OCI Logging Group for the Application.
 oci_logging_group_description | Description of the OCI Logging Group for the Application.
 oci_logging_log_name | Name of the OCI Logging Log for the Application.
 fn_config | Optional config of the function including key-value list for function environment. 
+
+
+## Contributing
+This project is open source. Please submit your contributions by forking this repository and submitting a pull request! FoggyKitchen appreciates any contributions that are made by the open source community.
+
+## License
+Copyright (c) 2024 FoggyKitchen.com
+
+Licensed under the Universal Permissive License (UPL), Version 1.0.
+
+See [LICENSE](LICENSE) for more details.
