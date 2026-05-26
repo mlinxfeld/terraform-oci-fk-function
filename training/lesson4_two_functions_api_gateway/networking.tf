@@ -4,6 +4,7 @@ module "fk_vcn" {
   compartment_ocid = var.compartment_ocid
   name             = "fk-fn-lesson4-vcn"
   vcn_cidr_blocks  = ["10.0.0.0/16"]
+  dns_label        = "fkfnl4"
 
   create_internet_gateway = true
   create_nat_gateway      = true
@@ -79,6 +80,7 @@ module "fk_vcn" {
       dns_label                  = "fnpriv"
       route_table_key            = "private"
       security_list_keys         = ["functions_private"]
+      prohibit_internet_ingress  = true
       prohibit_public_ip_on_vnic = true
     }
   }

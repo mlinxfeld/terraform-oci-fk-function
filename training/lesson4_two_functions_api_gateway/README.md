@@ -87,6 +87,18 @@ After apply, the lesson outputs:
 - `fn_custom1_endpoint`
 - `fn_custom2_endpoint`
 
+### Terminal Smoke Test
+
+```bash
+eval "$(tofu output -json | jq -r '
+  .api_gateway_endpoints.value
+  | "export FNCUSTOM1_URL=\(.fn_custom1_endpoint)\nexport FNCUSTOM2_URL=\(.fn_custom2_endpoint)"
+')"
+
+curl -s -X POST "$FNCUSTOM1_URL" | jq .
+curl -s -X POST "$FNCUSTOM2_URL" | jq .
+```
+
 ---
 
 ## Validate The Deployment

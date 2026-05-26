@@ -12,6 +12,7 @@
 *.tfstate.*
 *.zip*
 *.tfvars
+.generated/
 
 # terraform lock file
 **/.terraform.lock.hcl

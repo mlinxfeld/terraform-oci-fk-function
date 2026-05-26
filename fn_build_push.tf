@@ -13,22 +13,17 @@ resource "null_resource" "FoggyKitchenFnSetup" {
   }
 
   provisioner "local-exec" {
-    command = "image=$(docker images | grep ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name} | awk -F ' ' '{print $3}') && if [ -n \"$image\" ]; then docker rmi \"$image\" -f; fi"
+    command = "docker image rm ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version} -f || true"
   }
 
   provisioner "local-exec" {
-    command     = "fn build"
-    working_dir = "${path.module}/functions/fkFn"
-  }
-
-  provisioner "local-exec" {
-    command     = "image=$(docker images | grep ${var.fk_fn_name} | awk -F ' ' '{print $3}') ; docker tag $image ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
-    working_dir = "${path.module}/functions/fkFn"
+    command     = "docker build -t ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version} ."
+    working_dir = local.fn_source_dir
   }
 
   provisioner "local-exec" {
     command     = "docker push ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
-    working_dir = "${path.module}/functions/fkFn"
+    working_dir = local.fn_source_dir
   }
 
 }
@@ -36,25 +31,25 @@ resource "null_resource" "FoggyKitchenFnSetup" {
 resource "local_file" "dockerfile_content" {
   count    = var.use_my_fn ? 1 : 0
   content  = var.dockerfile_content
-  filename = "${path.module}/functions/fkFn/Dockerfile"
+  filename = "${local.fn_source_dir}/Dockerfile"
 }
 
 resource "local_file" "func_py_content" {
   count    = var.use_my_fn ? 1 : 0
   content  = var.func_py_content
-  filename = "${path.module}/functions/fkFn/func.py"
+  filename = "${local.fn_source_dir}/func.py"
 }
 
 resource "local_file" "func_yaml_content" {
   count    = var.use_my_fn ? 1 : 0
   content  = var.func_yaml_content
-  filename = "${path.module}/functions/fkFn/func.yaml"
+  filename = "${local.fn_source_dir}/func.yaml"
 }
 
 resource "local_file" "requirements_txt_content" {
   count    = var.use_my_fn ? 1 : 0
   content  = var.requirements_txt_content
-  filename = "${path.module}/functions/fkFn/requirements.txt"
+  filename = "${local.fn_source_dir}/requirements.txt"
 }
 
 resource "null_resource" "FoggyKitchenMyFnSetup" {
@@ -66,22 +61,17 @@ resource "null_resource" "FoggyKitchenMyFnSetup" {
   }
 
   provisioner "local-exec" {
-    command = "image=$(docker images | grep ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name} | awk -F ' ' '{print $3}') && if [ -n \"$image\" ]; then docker rmi \"$image\" -f; fi"
+    command = "docker image rm ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version} -f || true"
   }
 
   provisioner "local-exec" {
-    command     = "fn build"
-    working_dir = "${path.module}/functions/fkFn"
-  }
-
-  provisioner "local-exec" {
-    command     = "image=$(docker images | grep ${var.fk_fn_name} | awk -F ' ' '{print $3}') ; docker tag $image ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
-    working_dir = "${path.module}/functions/fkFn"
+    command     = "docker build -t ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version} ."
+    working_dir = local.fn_source_dir
   }
 
   provisioner "local-exec" {
     command     = "docker push ${local.ocir_docker_repository}/${local.ocir_namespace}/${var.ocir_repo_name}/${var.fk_fn_name}:${var.fk_fn_version}"
-    working_dir = "${path.module}/functions/fkFn"
+    working_dir = local.fn_source_dir
   }
 
 }
