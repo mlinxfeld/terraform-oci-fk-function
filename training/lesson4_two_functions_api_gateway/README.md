@@ -89,6 +89,8 @@ After apply, the lesson outputs:
 
 ### Terminal Smoke Test
 
+The first invocation may take a little longer. Right after `tofu apply`, OCI API Gateway and Functions can still be settling, so the first request may briefly return a transient error such as `404 Not Found`. Retry after a short pause if that happens.
+
 ```bash
 eval "$(tofu output -json | jq -r '
   .api_gateway_endpoints.value
@@ -97,6 +99,24 @@ eval "$(tofu output -json | jq -r '
 
 curl -s -X POST "$FNCUSTOM1_URL" | jq .
 curl -s -X POST "$FNCUSTOM2_URL" | jq .
+```
+
+Possible early response:
+
+```text
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+</body>
+</html>
+```
+
+Expected healthy response:
+
+```json
+{"message":"Here is function fncustom1!"}
+{"message":"Here is function fncustom2!"}
 ```
 
 ---
