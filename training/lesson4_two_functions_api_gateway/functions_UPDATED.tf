@@ -1,6 +1,6 @@
 
 module "oci-fk-custom-function-1" {
-  source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
+  source                   = "../.."
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -15,12 +15,12 @@ module "oci-fk-custom-function-1" {
   invoke_fn                = false # No manual fn invoke - we will invoke it via API Gateway
   use_oci_logging          = true
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id ## Function now in private subnet
-  fn_config                = {"FN_CUSTOM_MESSAGE" : "${var.fncustom1_message}"}
+  my_fn_subnet_ocid        = module.fk_vcn.subnet_ids["functions_private"]
+  fn_config                = { "FN_CUSTOM_MESSAGE" : "${var.fncustom1_message}" }
 }
 
 module "oci-fk-custom-function-2" {
-  source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
+  source                   = "../.."
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -37,6 +37,6 @@ module "oci-fk-custom-function-2" {
   use_my_fn_app            = true
   my_fn_app_ocid           = module.oci-fk-custom-function-1.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id ## Function now in private subnet
-  fn_config                = {"FN_CUSTOM_MESSAGE" : "${var.fncustom2_message}"}
+  my_fn_subnet_ocid        = module.fk_vcn.subnet_ids["functions_private"]
+  fn_config                = { "FN_CUSTOM_MESSAGE" : "${var.fncustom2_message}" }
 }
