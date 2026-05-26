@@ -3,9 +3,9 @@ data "oci_objectstorage_namespace" "os_namespace" {
 }
 
 data "oci_identity_regions" "oci_regions" {
-  
+
   filter {
-    name = "name" 
+    name   = "name"
     values = [var.region]
   }
 
