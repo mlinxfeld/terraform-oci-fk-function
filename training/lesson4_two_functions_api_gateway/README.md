@@ -132,11 +132,22 @@ Expected healthy response:
 The screenshots below illustrate the expected result:
 
 ![](images/terraform-oci-fk-function-lesson4a.png)
+The API Gateway deployment exposes both routes under one shared public endpoint. This is the public entry point that fronts the private Functions Application.
+
 ![](images/terraform-oci-fk-function-lesson4b.png)
+The first route forwards requests to `fncustom1`. This confirms that API Gateway is wired to the first Oracle Functions backend.
+
 ![](images/terraform-oci-fk-function-lesson4c.png)
+The second route forwards requests to `fncustom2`. Both functions stay behind the same gateway, but each route keeps its own backend mapping.
+
 ![](images/terraform-oci-fk-function-lesson4d.png)
+The first function returns the expected JSON payload when invoked through API Gateway. This is the same behavior you can verify with the terminal smoke test.
+
 ![](images/terraform-oci-fk-function-lesson4e.png)
+The second function also returns a healthy JSON response through the shared gateway. Together, these two tests confirm end-to-end routing for both backends.
+
 ![](images/terraform-oci-fk-function-lesson4f.png)
+OCI Console metrics and logs should show successful invocations after the tests complete. Use this view to confirm that requests reached the deployed functions, not just the gateway layer.
 
 ---
 
