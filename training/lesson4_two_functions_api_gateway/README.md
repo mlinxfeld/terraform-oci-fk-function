@@ -132,22 +132,28 @@ Expected healthy response:
 The screenshots below illustrate the expected result:
 
 ![](images/terraform-oci-fk-function-lesson4a.png)
-The API Gateway deployment exposes both routes under one shared public endpoint. This is the public entry point that fronts the private Functions Application.
+Figure 1. Postman invocation of the `fncustom1` route through OCI API Gateway.
+The request uses a `POST` call to the `/v1/fncustom1` path and returns the expected JSON response from the first function.
 
 ![](images/terraform-oci-fk-function-lesson4b.png)
-The first route forwards requests to `fncustom1`. This confirms that API Gateway is wired to the first Oracle Functions backend.
+Figure 2. Postman invocation of the `fncustom2` route through OCI API Gateway.
+This confirms that the second path `/v1/fncustom2` is also exposed correctly and returns a healthy response from the second function.
 
 ![](images/terraform-oci-fk-function-lesson4c.png)
-The second route forwards requests to `fncustom2`. Both functions stay behind the same gateway, but each route keeps its own backend mapping.
+Figure 3. OCI Console navigation to **Developer Services** -> **Gateways**.
+Use this view to open the API Gateway service and inspect the gateway and deployment created by the lesson.
 
 ![](images/terraform-oci-fk-function-lesson4d.png)
-The first function returns the expected JSON payload when invoked through API Gateway. This is the same behavior you can verify with the terminal smoke test.
+Figure 4. API Gateway deployment details and metrics in the OCI Console.
+The deployment shows the `/v1` path prefix and the metrics panel confirms that HTTP requests reached the gateway.
 
 ![](images/terraform-oci-fk-function-lesson4e.png)
-The second function also returns a healthy JSON response through the shared gateway. Together, these two tests confirm end-to-end routing for both backends.
+Figure 5. OCI Function `fncustom1` metrics after the API Gateway test.
+The invocation chart confirms that requests routed through the gateway reached the first backend function.
 
 ![](images/terraform-oci-fk-function-lesson4f.png)
-OCI Console metrics and logs should show successful invocations after the tests complete. Use this view to confirm that requests reached the deployed functions, not just the gateway layer.
+Figure 6. OCI Function `fncustom2` metrics after the API Gateway test.
+This mirrors the previous function view and confirms successful invocation of the second backend function.
 
 ---
 
