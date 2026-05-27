@@ -15,6 +15,8 @@ The lesson also extends the multi-module pattern introduced in [Lesson 4](../les
 
 ![](images/terraform-oci-fk-function-lesson5.png)
 
+**Figure 1.** Architecture overview for the asynchronous serverless flow. API Gateway exposes the public `fninitiator` endpoint, the initiator publishes a message to an OCI Notifications topic, and the private `fncollector` function receives that message through the ONS subscription.
+
 ---
 
 ## What This Lesson Shows
@@ -159,13 +161,23 @@ The screenshots below illustrate the expected result:
 
 ![](images/terraform-oci-fk-function-lesson5a.png)
 
+**Figure 2.** Postman confirms that a `POST` request to the public API Gateway route returns a successful `fninitiator` response. This is the synchronous entry point into the workflow and the first proof that the gateway-to-function path works.
+
 ![](images/terraform-oci-fk-function-lesson5b.png)
+
+**Figure 3.** The Functions Application stays attached to the private subnet and has invocation logging enabled. This confirms that only API Gateway is exposed publicly while the Functions runtime remains private.
 
 ![](images/terraform-oci-fk-function-lesson5c.png)
 
+**Figure 4.** Function invocation logs show the complete asynchronous hop. The lower block contains the `fninitiator` publication logs, and the upper block shows `fncollector` receiving the same message from OCI Notifications.
+
 ![](images/terraform-oci-fk-function-lesson5d.png)
 
+**Figure 5.** OCI Console navigation to Developer Services and Notifications. This is the service area used to inspect the topic and subscription created for the fan-out between the two functions.
+
 ![](images/terraform-oci-fk-function-lesson5e.png)
+
+**Figure 6.** Topic metrics confirm that OCI Notifications received and published the message emitted by `fninitiator`. This complements the function logs and provides service-level confirmation that the event passed through ONS.
 
 ---
 
