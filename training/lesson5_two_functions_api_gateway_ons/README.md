@@ -1,265 +1,198 @@
+# Lesson 5: Two Functions, API Gateway and OCI Notifications
 
-# FoggyKitchen OCI Function with Terraform 
+This lesson shows how to build a small **event-driven serverless workflow** on OCI using **two Functions**, **OCI API Gateway**, and **OCI Notifications Service (ONS)**.
 
-## LESSON 5 - Two Functions, API Gateway and ONS
+The public entry point is the `fninitiator` function, exposed through **API Gateway**. It publishes a message to an **ONS topic**, and the private `fncollector` function is subscribed to that topic and processes the message asynchronously.
 
-In this fifth lesson, we will delve into creating an advanced event-driven architecture with two functions, `fninititor` and `fncollector`, both residing in a private subnet. This architecture demonstrates how to efficiently manage asynchronous processes and enhance scalability.
+The Functions Application stays in a **private subnet**. A separate **public subnet** is used for API Gateway, which becomes the only internet-facing entry point.
 
-The first function, `fninititor`, will be exposed to the public Internet via an API Gateway. This means you will invoke `fninititor` using an endpoint provided by the API Gateway, ensuring secure and controlled access. Each invocation of `fninititor` will send a message to the OCI Notification Service (ONS), leveraging the capabilities of ONS to handle notifications efficiently.
+The lesson also extends the multi-module pattern introduced in [Lesson 4](../lesson4_two_functions_api_gateway/README.md):
 
-The second function, `fncollector`, will be subscribed to a topic within ONS. This setup ensures that whenever `fninititor` posts a message to ONS, it automatically triggers the execution of `fncollector`. This decoupling of functions allows `fninititor` to handle requests quickly and offload processing tasks to `fncollector`, which will process the message asynchronously.
-
-We will utilize OCI logging to track and visualize this workflow, providing clear insights into the sequence of events and the interaction between the functions. This event-driven architecture offers several key benefits:
-1. **Decoupling**: Functions operate independently, making the system more modular and easier to manage.
-2. **Scalability**: The asynchronous processing allows the system to handle a high volume of requests without performance degradation.
-3. **Efficiency**: `fninititor` can quickly respond to incoming requests, while `fncollector` handles processing in the background, improving overall responsiveness.
-
-This architecture lays a strong foundation for more complex workflows and integrations, which will be explored in further lessons. By the end of this lesson, you will have a robust understanding of building scalable, event-driven systems using OCI services.
+- `terraform-oci-fk-vcn` for networking
+- `terraform-oci-fk-policy` for IAM
+- `terraform-oci-fk-api-gateway` for API publishing
+- `terraform-oci-fk-ons` for OCI Notifications topics and subscriptions
 
 ![](images/terraform-oci-fk-function-lesson5.png)
 
-## Deploy Using Oracle Resource Manager
+---
 
-1. Click [![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?region=home&zipUrl=https://github.com/mlinxfeld/terraform-oci-fk-function/releases/latest/download/terraform-oci-fk-function-lesson5.zip)
+## What This Lesson Shows
 
-    If you aren't already signed in, when prompted, enter the tenancy and user credentials.
+- Two custom OCI Functions under one shared Functions Application
+- Private subnet placement for the Functions Application
+- Public subnet placement for OCI API Gateway
+- API Gateway routing to the public `fninitiator` function
+- OCI Notifications topic publication from `fninitiator`
+- OCI Notifications subscription that triggers `fncollector`
+- Explicit IAM for both API Gateway invocation and Functions-to-ONS publishing
+- Reusable building block composition instead of raw OCI resources embedded in the lesson
 
-2. Review and accept the terms and conditions.
+---
 
-3. Select the region where you want to deploy the stack.
+## Architecture Notes
 
-4. Follow the on-screen prompts and instructions to create the stack.
+- `terraform-oci-fk-vcn` creates the VCN, public API Gateway subnet, and private Functions subnet
+- `terraform-oci-fk-function` creates both functions and the shared Functions Application
+- `terraform-oci-fk-policy` creates:
+  - the tenancy policy that allows API Gateway to invoke Functions
+  - the dynamic group and tenancy policy that allow Functions to publish to OCI Notifications
+- `terraform-oci-fk-ons` creates the topic and the Function subscription
+- `terraform-oci-fk-api-gateway` creates the public gateway, deployment, and route
 
-5. After creating the stack, click **Terraform Actions**, and select **Plan**.
+This lesson builds directly on the explicit module composition introduced in [Lesson 4](../lesson4_two_functions_api_gateway/README.md), but adds an asynchronous event hop through OCI Notifications.
 
-6. Wait for the job to be completed, and review the plan.
+---
 
-    To make any changes, return to the Stack Details page, click **Edit Stack**, and make the required changes. Then, run the **Plan** action again.
+## Deploy Using Terraform CLI
 
-7. If no further changes are necessary, return to the Stack Details page, click **Terraform Actions**, and select **Apply**. 
+### Clone The Repository
 
-## Deploy Using the Terraform CLI in Cloud Shell
-
-### Clone of the repo into OCI Cloud Shell
-
-Now, you'll want a local copy of this repo. You can make that with the commands:
-Clone the repo from github by executing the command as follows and then go to proper subdirectory:
-
+```bash
+git clone https://github.com/foggykitchen/terraform-oci-fk-function.git
+cd terraform-oci-fk-function/training/lesson5_two_functions_api_gateway_ons
 ```
-martin_lin@codeeditor:~ (eu-frankfurt-1)$ git clone https://github.com/mlinxfeld/terraform-oci-fk-function.git
 
-martin_lin@codeeditor:~ (eu-frankfurt-1)$ cd terraform-oci-fk-function
+### Prepare Variables
 
-martin_lin@codeeditor:terraform-oci-fk-adb (eu-frankfurt-1)$ cd training/lesson5_two_functions_api_gateway_ons/
+```bash
+cp terraform.tfvars.example terraform.tfvars
 ```
 
-### Prerequisites
-Create environment file with terraform.tfvars file starting with example file:
+Populate at least:
 
-```
-martin_lin@codeeditor:lesson5_two_functions_api_gateway_ons (eu-frankfurt-1)$ cp terraform.tfvars.example terraform.tfvars
-
-martin_lin@codeeditor:lesson5_two_functions_api_gateway_ons (eu-frankfurt-1)$ vi terraform.tfvars
-
+```hcl
 tenancy_ocid       = "ocid1.tenancy.oc1..<your_tenancy_ocid>"
-compartment_ocid   = "ocid1.compartment.oc1..<your_comparment_ocid>"
-region             = "<oci_region>"
+compartment_ocid   = "ocid1.compartment.oc1..<your_compartment_ocid>"
+user_ocid          = "ocid1.user.oc1..<your_user_ocid>"
+fingerprint        = "<your_api_key_fingerprint>"
+private_key_path   = "~/.oci/oci_api_key.pem"
+region             = "eu-frankfurt-1"
 ocir_user_name     = "<user_name>"
 ocir_user_password = "<user_auth_token>"
 ```
 
-### Initialize Terraform
+### Initialize
 
-Run the following command to initialize Terraform environment:
-
-```
-martin_lin@codeeditor:lesson5_two_functions_api_gateway_ons (eu-frankfurt-1)$ terraform init 
-
-Initializing the backend...
-Upgrading modules...
-Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-collector-function...
-- oci-fk-collector-function in .terraform/modules/oci-fk-collector-function
-Downloading git::https://github.com/mlinxfeld/terraform-oci-fk-function.git for oci-fk-initiator-function...
-- oci-fk-initiator-function in .terraform/modules/oci-fk-initiator-function
-
-Initializing provider plugins...
-- Finding latest version of hashicorp/local...
-- Finding latest version of hashicorp/null...
-- Finding latest version of hashicorp/oci...
-- Using previously-installed hashicorp/local v2.5.1
-- Using previously-installed hashicorp/null v3.2.2
-- Installing hashicorp/oci v5.46.0...
-- Installed hashicorp/oci v5.46.0 (unauthenticated)
-
-Terraform has made some changes to the provider dependency selections recorded
-in the .terraform.lock.hcl file. Review those changes and commit them to your
-version control system if they represent changes you intended to make.
-
-Terraform has been successfully initialized!
-
-You may now begin working with Terraform. Try running "terraform plan" to see
-any changes that are required for your infrastructure. All Terraform commands
-should now work.
-
-If you ever set or change modules or backend configuration for Terraform,
-rerun this command to reinitialize your working directory. If you forget, other
-commands will detect it and remind you to do so if necessary.
+```bash
+tofu init
 ```
 
-### Apply the changes 
+### Review The Plan
 
-Run the following command for applying changes with the proposed plan:
-
-```
-martin_lin@codeeditor:lesson5_two_functions_api_gateway_ons (eu-frankfurt-1)$ terraform apply 
-
-data.local_file.fninitiator_dockerfile: Reading...
-data.local_file.fncollector_dockerfile: Reading...
-data.local_file.fncollector_requirements_txt: Reading...
-data.local_file.fncollector_func_py: Reading...
-data.local_file.fninitiator_func_yaml: Reading...
-data.local_file.fninitiator_func_py: Reading...
-data.local_file.fncollector_func_yaml: Reading...
-data.local_file.fninitiator_requirements_txt: Reading...
-data.local_file.fncollector_func_yaml: Read complete after 0s [id=99f92ef5b29cc6c37f4c6107485d9695b44eb518]
-data.local_file.fncollector_dockerfile: Read complete after 0s [id=aa3833301ffe31669490f8269952e79a0989b142]
-data.local_file.fninitiator_requirements_txt: Read complete after 0s [id=91bd32a35ac20833294303bda57f32b4c1692a09]
-
-(...)
-
-# module.oci-fk-initiator-function.oci_logging_log_group.FoggyKitchenFnAppLogGroup[0] will be created
-  + resource "oci_logging_log_group" "FoggyKitchenFnAppLogGroup" {
-      + compartment_id     = "ocid1.compartment.oc1..aaaaaaaaiyy4srmrb32v5rlniicwmpxsytywiucgbcp5ext6e4ahjfuloewa"
-      + defined_tags       = (known after apply)
-      + description        = "Foggy Kitchen Fn App Log Group"
-      + display_name       = "FoggyKitchenFnAppLogGroup"
-      + freeform_tags      = (known after apply)
-      + id                 = (known after apply)
-      + state              = (known after apply)
-      + time_created       = (known after apply)
-      + time_last_modified = (known after apply)
-    }
-
-Plan: 33 to add, 0 to change, 0 to destroy.
-
-Changes to Outputs:
-  + api_gateway_endpoints = {
-      + fninitiator_endpoint = (known after apply)
-    }
-
-Do you want to perform these actions?
-  Terraform will perform the actions described above.
-  Only 'yes' will be accepted to approve.
-
-  Enter a value: yes
-
-(...)
-
-module.oci-fk-collector-function.oci_functions_function.FoggyKitchenFn: Creation complete after 1s [id=ocid1.fnfunc.oc1.eu-frankfurt-1.aaaaaaaacf3z5xckujvhmhoxdztb737djtv4psxrzdaaprsgxxkyqw3ayhfa]
-oci_ons_subscription.FoggyKitchenSubscription: Creating...
-oci_ons_subscription.FoggyKitchenSubscription: Creation complete after 0s [id=ocid1.onssubscription.oc1.eu-frankfurt-1.aaaaaaaagfhkjvonpy4n4tdiwin6rle6kll3eytnoucmy4jv2hq4yf66jatq]
-oci_apigateway_deployment.FoggyKitchenAPIGatewayDeployment: Still creating... [10s elapsed]
-oci_apigateway_deployment.FoggyKitchenAPIGatewayDeployment: Still creating... [20s elapsed]
-oci_apigateway_deployment.FoggyKitchenAPIGatewayDeployment: Still creating... [30s elapsed]
-oci_apigateway_deployment.FoggyKitchenAPIGatewayDeployment: Creation complete after 36s [id=ocid1.apideployment.oc1.eu-frankfurt-1.amaaaaaadngk4giaqyi6tad6alum623i6uxh3jisscevyduwnelrylyj3dka]
-
-Apply complete! Resources: 33 added, 0 changed, 0 destroyed.
-
-Outputs:
-
-api_gateway_endpoints = {
-  "fninitiator_endpoint" = "https://igizr2m6yvmusjamflwzzy3nfm.apigateway.eu-frankfurt-1.oci.customer-oci.com/v1/fninitiator"
-}
-
+```bash
+tofu plan
 ```
 
-### Validate the deployment
+### Apply
 
-1. Use Postman to execute a POST request to the `fninitiator` function through the API Gateway endpoint:
+```bash
+tofu apply
+```
+
+After apply, the lesson outputs:
+
+- `fninitiator_endpoint`
+
+### Terminal Smoke Test
+
+The first invocation may take a little longer. Right after `tofu apply`, OCI API Gateway, OCI Functions, and the OCI Notifications subscription can still be settling, so the first request may briefly return a transient error such as `404 Not Found`. Retry after a short pause if that happens.
+
+```bash
+export FNINITIATOR_URL="$(tofu output -json | jq -r '.api_gateway_endpoints.value.fninitiator_endpoint')"
+
+RESPONSE="$(curl -s -X POST "$FNINITIATOR_URL")"
+echo "$RESPONSE" | jq .
+
+export CORRELATION_ID="$(echo "$RESPONSE" | jq -r '.correlation_id')"
+echo "$CORRELATION_ID"
+```
+
+Possible early response:
+
+```text
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+</body>
+</html>
+```
+
+Expected healthy response:
+
+```json
+{"status":"fninitiator: Message published successfully","correlation_id":"<uuid>","ons_response":"<OCI ONS response payload>"}
+```
+
+### Validate The Asynchronous Flow
+
+After the `fninitiator` call succeeds, use the returned `correlation_id` to confirm the asynchronous hop into `fncollector`.
+
+1. Open **Logging** in the OCI Console and confirm that the `fninitiator` function logged successful ONS publication.
+2. Search for the same `correlation_id` in the `fncollector` logs and confirm that the ONS subscription invoked the collector function.
+3. Open **Developer Services** -> **Notifications** and inspect the created topic and subscription.
+4. Confirm that the Functions Application still stays in the private subnet while only API Gateway remains public.
+
+If you want to verify this from the terminal, the same pattern can be checked with OCI CLI log search:
+
+```bash
+export COMPARTMENT_OCID="$(grep '^compartment_ocid' terraform.tfvars | cut -d '"' -f2)"
+export TIME_START="$(date -u -v-15M '+%Y-%m-%dT%H:%M:%SZ')"
+export TIME_END="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+oci logging-search search-logs \
+  --search-query "search \"${COMPARTMENT_OCID}\" | sort by datetime desc" \
+  --time-start "$TIME_START" \
+  --time-end "$TIME_END" \
+  | jq -r '.data.results[].data.logContent.data.message // empty' \
+  | grep "$CORRELATION_ID"
+```
+
+Expected `fncollector` log pattern:
+
+```text
+fncollector: Received correlation_id=<uuid> message=This is a message from fninitiator to fncollector
+```
+
+The screenshots below illustrate the expected result:
 
 ![](images/terraform-oci-fk-function-lesson5a.png)
 
-2. Locate the OCI Logging Service logs for the application and functions:
-
 ![](images/terraform-oci-fk-function-lesson5b.png)
-
-3. In the logs, locate the entries for the invocation of the `fninitiator` function, followed by the entries for the `fncollector` function:
 
 ![](images/terraform-oci-fk-function-lesson5c.png)
 
-4. From the hamburger menu in the top left corner, navigate to **Developer Services** and then select **Notifications**:
-
 ![](images/terraform-oci-fk-function-lesson5d.png)
-
-5. Confirm that a message has been sent for the ONS Topic:
 
 ![](images/terraform-oci-fk-function-lesson5e.png)
 
-### Destroy the changes 
+---
 
-Run the following command for destroying all resources:
+## Destroy
 
+```bash
+tofu destroy
 ```
-martin_lin@codeeditor:lesson5_two_functions_api_gateway_ons (eu-frankfurt-1)$ terraform destroy 
-data.local_file.fninitiator_func_py: Reading...
-data.local_file.fncollector_requirements_txt: Reading...
-data.local_file.fninitiator_dockerfile: Reading...
-data.local_file.fninitiator_func_yaml: Reading...
-data.local_file.fninitiator_requirements_txt: Reading...
-data.local_file.fncollector_func_py: Reading...
-data.local_file.fncollector_dockerfile: Reading...
-data.local_file.fncollector_func_yaml: Reading...
-data.local_file.fninitiator_requirements_txt: Read complete after 0s [id=91bd32a35ac20833294303bda57f32b4c1692a09]
-data.local_file.fncollector_func_yaml: Read complete after 0s [id=99f92ef5b29cc6c37f4c6107485d9695b44eb518]
-data.local_file.fncollector_requirements_txt: Read complete after 0s [id=91bd32a35ac20833294303bda57f32b4c1692a09]
-data.local_file.fninitiator_func_py: Read complete after 0s [id=6dced7fa8b82617897a42c0eab5dfa89817728e3]
-data.local_file.fninitiator_dockerfile: Read complete after 0s [id=aa3833301ffe31669490f8269952e79a0989b142]
-data.local_file.fninitiator_func_yaml: Read complete after 0s [id=761aa78c00bb99a16a6afbd05af3fd3a79cc3627]
-data.local_file.fncollector_dockerfile: Read complete after 0s [id=aa3833301ffe31669490f8269952e79a0989b142]
-data.local_file.fncollector_func_py: Read complete after 0s [id=0b3913ed36bb28e5aeaf4392200b953fcb743c6c]
 
-(...)
+---
 
-  # module.oci-fk-initiator-function.oci_logging_log_group.FoggyKitchenFnAppLogGroup[0] will be destroyed
-  - resource "oci_logging_log_group" "FoggyKitchenFnAppLogGroup" {
-      - compartment_id     = "ocid1.compartment.oc1..aaaaaaaaiyy4srmrb32v5rlniicwmpxsytywiucgbcp5ext6e4ahjfuloewa" -> null
-      - defined_tags       = {} -> null
-      - description        = "Foggy Kitchen Fn App Log Group" -> null
-      - display_name       = "FoggyKitchenFnAppLogGroup" -> null
-      - freeform_tags      = {} -> null
-      - id                 = "ocid1.loggroup.oc1.eu-frankfurt-1.amaaaaaadngk4giajyqlq67cvjbyn5uk7r3bbvd6ezlt6juyh6bhqaouz54a" -> null
-      - state              = "ACTIVE" -> null
-      - time_created       = "2024-06-25 10:20:29.324 +0000 UTC" -> null
-      - time_last_modified = "2024-06-25 10:20:29.324 +0000 UTC" -> null
-    }
+## Related Resources
 
-Plan: 0 to add, 0 to change, 33 to destroy.
+- [Training index](../README.md)
+- [Lesson 4: Two Functions Behind API Gateway](../lesson4_two_functions_api_gateway/README.md)
+- [FoggyKitchen OCI VCN Module](https://github.com/foggykitchen/terraform-oci-fk-vcn)
+- [FoggyKitchen OCI Policy Module](https://github.com/foggykitchen/terraform-oci-fk-policy)
+- [FoggyKitchen OCI API Gateway Module](https://github.com/foggykitchen/terraform-oci-fk-api-gateway)
+- [FoggyKitchen OCI ONS Module](https://github.com/foggykitchen/terraform-oci-fk-ons)
 
-Changes to Outputs:
-  - api_gateway_endpoints = {
-      - fninitiator_endpoint = "https://igizr2m6yvmusjamflwzzy3nfm.apigateway.eu-frankfurt-1.oci.customer-oci.com/v1/fninitiator"
-    } -> null
+---
 
-Do you really want to destroy all resources?
-  Terraform will destroy all your managed infrastructure, as shown above.
-  There is no undo. Only 'yes' will be accepted to confirm.
+## License
 
-  Enter a value: yes
+Licensed under the **Universal Permissive License (UPL), Version 1.0**.
+See [LICENSE](../../LICENSE) for details.
 
-(...)
+---
 
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 13m30s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 13m40s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 13m50s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m0s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m10s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m20s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m30s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m40s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 14m50s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Still destroying... [id=ocid1.onstopic.oc1.eu-frankfurt-1.amaaa...ne5tjcb2ymo5hhevy7nxz6xkl5zjexz726xvnq, 15m0s elapsed]
-oci_ons_notification_topic.FoggyKitchenTopic: Destruction complete after 15m9s
-
-Destroy complete! Resources: 33 destroyed.
-
-```
+© 2026 [FoggyKitchen.com](https://foggykitchen.com) - Cloud. Code. Clarity.

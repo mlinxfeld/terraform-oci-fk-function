@@ -1,29 +1,46 @@
-resource "oci_identity_policy" "FoggyKitchenAPIGatewayPolicy" {
-  provider = oci.homeregion  
-  name = "FoggyKitchenAPIGatewayPolicy"
-  description = "FoggyKitchenAPIGatewayPolicy"
-  compartment_id = var.compartment_ocid
-  statements = ["ALLOW any-user to use functions-family in compartment id ${var.compartment_ocid} where ALL { request.principal.type= 'ApiGateway' , request.resource.compartment.id = '${var.compartment_ocid}'}"]
-}
+module "fk_policy_apigateway_functions" {
+  source = "../../../terraform-oci-fk-policy"
 
-# Added Dynamic Group and Policy for ONS
+  providers = {
+    oci = oci.homeregion
+  }
 
-resource "oci_identity_dynamic_group" "FoggyKitchenFunctionDG" {
-  provider       = oci.homeregion  
-  compartment_id = var.tenancy_ocid
-  name           = "FoggyKitchenFunctionDG"
-  description    = "FoggyKitchen Function Dynamic Group"
-  matching_rule  = "ALL {resource.type = 'fnfunc', resource.compartment.id = '${var.compartment_ocid}'}"
-}
+  tenancy_ocid = var.tenancy_ocid
 
-resource "oci_identity_policy" "FoggyKitchenFnONSPolicy" {
-  provider = oci.homeregion  
-  name = "FoggyKitchenFnONSPolicy"
-  description = "FoggyKitchenFnONSPolicy"
-  compartment_id = var.tenancy_ocid
-
-  statements = [
-    "Allow dynamic-group FoggyKitchenFunctionDG to manage ons-topics in tenancy",
-    "Allow dynamic-group FoggyKitchenFunctionDG to use ons-subscriptions in tenancy"
+  policies = [
+    {
+      name        = "fk_fn_lesson5_apigateway_policy"
+      description = "Allow OCI API Gateway to invoke Functions in the lesson5 compartment"
+      statements = [
+        "ALLOW any-user to use functions-family in compartment id ${var.compartment_ocid} where ALL { request.principal.type = 'ApiGateway', request.resource.compartment.id = '${var.compartment_ocid}' }"
+      ]
+    }
   ]
-}  
+}
+
+module "fk_policy_function_ons" {
+  source = "../../../terraform-oci-fk-policy"
+
+  providers = {
+    oci = oci.homeregion
+  }
+
+  tenancy_ocid = var.tenancy_ocid
+
+  dynamic_group = {
+    name          = "fk_fn_lesson5_dg"
+    description   = "Dynamic group for lesson5 Functions that publish to OCI Notifications"
+    matching_rule = "ALL {resource.type = 'fnfunc', resource.compartment.id = '${var.compartment_ocid}'}"
+  }
+
+  policies = [
+    {
+      name        = "fk_fn_lesson5_ons_policy"
+      description = "Allow lesson5 Functions to publish to OCI Notifications"
+      statements = [
+        "Allow dynamic-group fk_fn_lesson5_dg to manage ons-topics in tenancy",
+        "Allow dynamic-group fk_fn_lesson5_dg to use ons-subscriptions in tenancy"
+      ]
+    }
+  ]
+}

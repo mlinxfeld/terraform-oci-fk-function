@@ -1,6 +1,5 @@
-
 module "oci-fk-initiator-function" {
-  source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
+  source                   = "../.."
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -15,12 +14,17 @@ module "oci-fk-initiator-function" {
   invoke_fn                = false
   use_oci_logging          = true
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"TOPIC_OCID" : "${oci_ons_notification_topic.FoggyKitchenTopic.id}", "DEBUG_MODE" : "${var.fn_debug_mode}"}
+  my_fn_subnet_ocid        = module.fk_vcn.subnet_ids["functions_private"]
+  fn_config = {
+    TOPIC_OCID = module.fk_ons.topic_id
+    DEBUG_MODE = tostring(var.fn_debug_mode)
+  }
+
+  depends_on = [module.fk_policy_function_ons]
 }
 
 module "oci-fk-collector-function" {
-  source                   = "github.com/mlinxfeld/terraform-oci-fk-function"
+  source                   = "../.."
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -37,6 +41,8 @@ module "oci-fk-collector-function" {
   use_my_fn_app            = true
   my_fn_app_ocid           = module.oci-fk-initiator-function.oci_app_fn.fn_app_ocid
   use_my_fn_network        = true
-  my_fn_subnet_ocid        = oci_core_subnet.FoggyKitchenPrivateSubnet.id
-  fn_config                = {"DEBUG_MODE" : "${var.fn_debug_mode}"}
+  my_fn_subnet_ocid        = module.fk_vcn.subnet_ids["functions_private"]
+  fn_config = {
+    DEBUG_MODE = tostring(var.fn_debug_mode)
+  }
 }
