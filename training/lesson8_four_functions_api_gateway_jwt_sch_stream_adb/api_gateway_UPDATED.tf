@@ -1,5 +1,5 @@
 module "fk_api_gateway" {
-  source = "git::https://github.com/foggykitchen/terraform-oci-fk-api-gateway.git?ref=main"
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-api-gateway.git?ref=v0.1.1"
 
   name             = "fk-fn-lesson8-api-gateway"
   compartment_ocid = var.compartment_ocid
