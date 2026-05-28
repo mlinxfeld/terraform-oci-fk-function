@@ -113,6 +113,12 @@ variable "requirements_txt_content" {
   default     = ""
 }
 
+variable "extra_files" {
+  description = "Additional files written into the generated function source directory when use_my_fn is true."
+  type        = map(string)
+  default     = {}
+}
+
 variable "use_my_fn_network" {
   description = "Use an externally managed subnet instead of creating module-managed networking."
   type        = bool

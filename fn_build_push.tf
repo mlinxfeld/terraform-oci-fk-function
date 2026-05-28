@@ -52,9 +52,15 @@ resource "local_file" "requirements_txt_content" {
   filename = "${local.fn_source_dir}/requirements.txt"
 }
 
+resource "local_file" "extra_files" {
+  for_each = var.use_my_fn ? var.extra_files : {}
+  content  = each.value
+  filename = "${local.fn_source_dir}/${each.key}"
+}
+
 resource "null_resource" "FoggyKitchenMyFnSetup" {
   count      = var.use_my_fn ? 1 : 0
-  depends_on = [oci_functions_application.FoggyKitchenFnApp, oci_artifacts_container_repository.FoggyKitchenOCIR, local_file.dockerfile_content, local_file.func_py_content, local_file.func_yaml_content, local_file.requirements_txt_content]
+  depends_on = [oci_functions_application.FoggyKitchenFnApp, oci_artifacts_container_repository.FoggyKitchenOCIR, local_file.dockerfile_content, local_file.func_py_content, local_file.func_yaml_content, local_file.requirements_txt_content, local_file.extra_files]
 
   provisioner "local-exec" {
     command = "echo '${var.ocir_user_password}' |  docker login ${local.ocir_docker_repository} --username ${local.ocir_namespace}/${var.ocir_user_name} --password-stdin"
