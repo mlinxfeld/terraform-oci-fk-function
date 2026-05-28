@@ -1,5 +1,5 @@
 module "fk_ons" {
-  source = "../../../terraform-oci-fk-ons"
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-ons.git?ref=v0.1.0"
 
   compartment_ocid  = var.compartment_ocid
   name              = "fk-fn-lesson6-topic"

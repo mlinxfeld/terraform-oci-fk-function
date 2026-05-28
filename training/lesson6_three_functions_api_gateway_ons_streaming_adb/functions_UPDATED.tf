@@ -1,5 +1,5 @@
 module "oci-fk-initiator-function" {
-  source                   = "../.."
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -26,7 +26,7 @@ module "oci-fk-initiator-function" {
 }
 
 module "oci-fk-collector-function" {
-  source                   = "../.."
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -66,7 +66,7 @@ module "oci-fk-collector-function" {
 }
 
 module "oci-fk-adb-setup-function" {
-  source                   = "../.."
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
