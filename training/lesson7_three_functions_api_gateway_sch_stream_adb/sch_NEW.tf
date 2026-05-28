@@ -1,16 +1,18 @@
-resource "oci_sch_service_connector" "FoggyKitchenServiceConnector" {
-    compartment_id = var.compartment_ocid
-    display_name = "FoggyKitchenServiceConnector"
-    description  = "FoggyKitchen Service Connector Hub"
-    source {
-      kind = "streaming"
-      stream_id = oci_streaming_stream.FoggyKitchenStream.id
-      cursor {
-        kind = "TRIM_HORIZON"
-      }
-    }
-    target {
-      kind = "functions"
-      function_id = module.oci-fk-collector-function.oci_app_fn.fn_ocid
-    }
+module "fk_sch" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-sch.git?ref=main"
+
+  name             = "fk-fn-lesson7-sch"
+  compartment_ocid = var.compartment_ocid
+  description      = "Service Connector Hub connector for lesson7 Streaming to Functions delivery"
+
+  streaming_source = {
+    stream_id   = module.fk_streaming.stream_ids["iot_data"]
+    cursor_kind = "TRIM_HORIZON"
+  }
+
+  functions_target = {
+    function_id = module.oci-fk-collector-function.oci_app_fn.fn_ocid
+  }
+
+  depends_on = [module.fk_policy_sch_connector]
 }
