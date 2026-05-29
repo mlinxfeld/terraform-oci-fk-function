@@ -13,8 +13,3 @@ data "oci_identity_regions" "oci_regions" {
     values = [var.region]
   }
 }
-
-data "oci_objectstorage_bucket" "lesson9_iot_bucket" {
-  namespace = module.fk_objectstorage.namespace
-  name      = module.fk_objectstorage.bucket_names["iot_data"]
-}

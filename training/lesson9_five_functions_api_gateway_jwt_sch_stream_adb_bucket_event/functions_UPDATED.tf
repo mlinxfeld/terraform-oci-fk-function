@@ -1,5 +1,5 @@
 module "oci-fk-initiator-function" {
-  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -25,7 +25,7 @@ module "oci-fk-initiator-function" {
 }
 
 module "oci-fk-collector-function" {
-  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -63,7 +63,7 @@ module "oci-fk-collector-function" {
 }
 
 module "oci-fk-adb-setup-function" {
-  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -102,7 +102,7 @@ module "oci-fk-adb-setup-function" {
 }
 
 module "oci-fk-jwt-auth-function" {
-  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name
@@ -126,7 +126,7 @@ module "oci-fk-jwt-auth-function" {
 }
 
 module "oci-fk-bulk-load-function" {
-  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git?ref=update-2026"
+  source                   = "git::https://github.com/foggykitchen/terraform-oci-fk-function.git"
   tenancy_ocid             = var.tenancy_ocid
   region                   = var.region
   ocir_user_name           = var.ocir_user_name

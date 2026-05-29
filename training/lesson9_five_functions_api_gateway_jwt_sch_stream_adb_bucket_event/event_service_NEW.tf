@@ -1,5 +1,5 @@
 module "fk_event_bucket_bulkload" {
-  source = "git::https://github.com/foggykitchen/terraform-oci-fk-event.git?ref=main"
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-event.git?ref=v0.1.0"
 
   name             = "fk-fn-lesson9-bucket-event"
   compartment_ocid = var.compartment_ocid
@@ -9,7 +9,7 @@ module "fk_event_bucket_bulkload" {
     eventType = "com.oraclecloud.objectstorage.createobject"
     data = {
       additionalDetails = {
-        bucketId = data.oci_objectstorage_bucket.lesson9_iot_bucket.bucket_id
+        bucketId = module.fk_objectstorage.bucket_ids["iot_data"]
       }
     }
   })
