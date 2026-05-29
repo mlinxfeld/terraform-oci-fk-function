@@ -1,7 +1,15 @@
-resource "oci_objectstorage_bucket" "FoggyKitchenBucket" {
-  compartment_id        = var.compartment_ocid
-  namespace             = data.oci_objectstorage_namespace.oss_namespace.namespace
-  object_events_enabled = true
-  name                  = var.bucket_name
-  access_type           = "NoPublicAccess"
+module "fk_objectstorage" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-objectstorage.git?ref=v0.1.1"
+
+  compartment_ocid = var.compartment_ocid
+  name             = "fk-fn-lesson9-obj"
+
+  buckets = {
+    iot_data = {
+      name                  = var.bucket_name
+      object_events_enabled = true
+      versioning            = "Disabled"
+      storage_tier          = "Standard"
+    }
+  }
 }

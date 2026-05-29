@@ -1,13 +1,15 @@
-resource "oci_ons_notification_topic" "FoggyKitchenTopic" {
-    compartment_id = var.compartment_ocid
-    name           = "FoggyKitchenTopic"
-    description    = "This topic triggers the fncollector function"
-}
+module "fk_ons" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-ons.git?ref=main"
 
-resource "oci_ons_subscription" "FoggyKitchenSubscription" {
-    compartment_id = var.compartment_ocid
-    endpoint       = module.oci-fk-collector-function.oci_app_fn.fn_ocid 
-    protocol       = "ORACLE_FUNCTIONS"
-    topic_id       = oci_ons_notification_topic.FoggyKitchenTopic.id
-}
+  compartment_ocid  = var.compartment_ocid
+  name              = "fk-fn-lesson6-topic"
+  topic_name        = "fk-fn-lesson6-topic"
+  topic_description = "This topic triggers the fncollector function"
 
+  subscriptions = {
+    fncollector = {
+      protocol = "ORACLE_FUNCTIONS"
+      endpoint = module.oci-fk-collector-function.oci_app_fn.fn_ocid
+    }
+  }
+}

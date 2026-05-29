@@ -8,9 +8,11 @@ resource "null_resource" "FoggyKitchenFnInvoke" {
   }
 
   provisioner "local-exec" {
-    command = "oci raw-request --http-method POST --target-uri ${oci_functions_function.FoggyKitchenFn.invoke_endpoint}/20181201/functions/${oci_functions_function.FoggyKitchenFn.id}/actions/invoke --request-body '' "
+    command = <<-EOT
+      RESPONSE=$(oci raw-request --http-method POST --target-uri ${oci_functions_function.FoggyKitchenFn.invoke_endpoint}/20181201/functions/${oci_functions_function.FoggyKitchenFn.id}/actions/invoke --request-body '')
+      echo "$RESPONSE"
+      echo "$RESPONSE" | grep -Eq '"status": 0|"data": ""'
+    EOT
   }
 
 }
-
-

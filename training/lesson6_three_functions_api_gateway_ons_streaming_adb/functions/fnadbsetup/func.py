@@ -1,4 +1,3 @@
-import base64
 import datetime
 import io
 import json
@@ -12,6 +11,7 @@ import subprocess
 import oracledb
 from fdk import response
 from zipfile import ZipFile
+from base64 import b64decode
 
 def setup_oci_client(client_type, signer, stream_endpoint):
     try:
@@ -23,10 +23,9 @@ def setup_oci_client(client_type, signer, stream_endpoint):
         elif client_type == 'streaming':
             oci_client = oci.streaming.StreamClient(config={}, signer=signer, service_endpoint=stream_endpoint)
         elif client_type == 'ons':
-            ons_client = oci.ons.NotificationDataPlaneClient(config={}, signer=signer)
+            oci_client = oci.ons.NotificationDataPlaneClient(config={}, signer=signer)
         else:
-            logging.getLogger().info(f'Invalid Client type {client_type}')
-            quit()
+            raise ValueError(f'Invalid Client type {client_type}')
 
         if DEBUG_MODE:
             logging.getLogger().info(f'Got {client_type} Client ok')
@@ -35,7 +34,7 @@ def setup_oci_client(client_type, signer, stream_endpoint):
 
     except Exception as fc:
         logging.getLogger().info(f'Raised exception: {str(fc)} attempting to initialize {client_type} Client')
-        quit()
+        raise
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -58,34 +57,46 @@ def read_and_log_file_content(file_path):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def get_wallet_from_adb(adb_client, adb_ocid, wallet_dir):
+def prepare_wallet(adb_client, adb_ocid, wallet_dir, wallet_content_b64=None):
     os.makedirs(wallet_dir, exist_ok=True)
+    for file_name in os.listdir(wallet_dir):
+        file_path = os.path.join(wallet_dir, file_name)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
 
-    if DEBUG_MODE:
-        logging.getLogger().info(f'Trying to get wallet for ADB: {adb_ocid}')
+    wallet_zip_path = os.path.join(wallet_dir, "dbwallet.zip")
 
-    adb_wallet_pwd = ''
-    while not valid_pw(adb_wallet_pwd):
-        adb_wallet_pwd = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(15)) # random string
-        
-    adb_wallet_details = oci.database.models.GenerateAutonomousDatabaseWalletDetails(password=adb_wallet_pwd)
+    if wallet_content_b64:
+        if DEBUG_MODE:
+            logging.getLogger().info('Using wallet content provided via function configuration.')
+        with open(wallet_zip_path, 'wb') as wallet_file:
+            wallet_file.write(b64decode(wallet_content_b64))
+    else:
+        if DEBUG_MODE:
+            logging.getLogger().info(f'Trying to get wallet for ADB: {adb_ocid}')
 
-    if DEBUG_MODE:
-        logging.getLogger().info(f'Wallet details: {adb_wallet_details}')
+        adb_wallet_pwd = ''
+        while not valid_pw(adb_wallet_pwd):
+            adb_wallet_pwd = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(15))
 
-    wallet_data = adb_client.generate_autonomous_database_wallet(adb_ocid, adb_wallet_details)
+        adb_wallet_details = oci.database.models.GenerateAutonomousDatabaseWalletDetails(password=adb_wallet_pwd)
 
-    if DEBUG_MODE:
-        logging.getLogger().info(f'Storing the wallet: {wallet_dir}{os.sep}dbwallet.zip')
+        if DEBUG_MODE:
+            logging.getLogger().info(f'Wallet details: {adb_wallet_details}')
 
-    with open(wallet_dir + os.sep + 'dbwallet.zip', 'w+b') as f:
-        for chunk in wallet_data.data.raw.stream(1024 * 1024, decode_content=False):
-            f.write(chunk)
+        wallet_data = adb_client.generate_autonomous_database_wallet(adb_ocid, adb_wallet_details)
+
+        if DEBUG_MODE:
+            logging.getLogger().info(f'Storing the wallet: {wallet_zip_path}')
+
+        with open(wallet_zip_path, 'w+b') as wallet_file:
+            for chunk in wallet_data.data.raw.stream(1024 * 1024, decode_content=False):
+                wallet_file.write(chunk)
 
     if DEBUG_MODE:
         logging.getLogger().info(f'Unziping the wallet to directory {wallet_dir}')
 
-    with ZipFile(wallet_dir + os.sep + 'dbwallet.zip', 'r') as zipObj:
+    with ZipFile(wallet_zip_path, 'r') as zipObj:
             zipObj.extractall(wallet_dir)
 
     # Check if extraction was successful and list files
@@ -105,21 +116,25 @@ def get_wallet_from_adb(adb_client, adb_ocid, wallet_dir):
         read_and_log_file_content(tnsnames_file)
 
     if DEBUG_MODE:
-    # Read and log the content of sqlnet.ora
         read_and_log_file_content(sqlnet_file)  
+
+    if not os.path.exists(tnsnames_file) or not os.path.exists(sqlnet_file):
+        raise FileNotFoundError(f'ADB wallet files were not extracted correctly into {wallet_dir}.')
 
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Setting environment
 DEBUG_MODE = os.getenv("DEBUG_MODE") is not None
 adb_ocid = os.getenv('ADB_OCID')
-oracle_home = os.getenv('ORACLE_HOME')
-adb_admin_user = "admin"
+adb_admin_user = "ADMIN"
 adb_admin_password = os.getenv('ADB_ADMIN_PASSWORD')
 adb_app_user_name = os.getenv('ADB_APP_USER_NAME')
 adb_app_user_password = os.getenv('ADB_APP_USER_PASSWORD')
 adb_sqlnet_alias = os.getenv('ADB_SQLNET_ALIAS')
-adb_wallet_dir = '/tmp'
+adb_wallet_content = os.getenv('ADB_WALLET_CONTENT')
+adb_wallet_password = os.getenv('ADB_WALLET_PASSWORD')
+adb_wallet_dir = '/tmp/adb_wallet'
+adb_wallet_file = os.path.join(os.path.dirname(__file__), 'adb_wallet.b64')
 
 if DEBUG_MODE:
     logging.getLogger().info(f'Getting signer using instance principals...')
@@ -133,10 +148,13 @@ adbClient = setup_oci_client('adb', signer,'')
 try:
     if DEBUG_MODE:
         logging.getLogger().info(f'Retrieving wallet from ADB: {adb_ocid}.')
-    get_wallet_from_adb(adbClient, adb_ocid, adb_wallet_dir)
+    if not adb_wallet_content and os.path.exists(adb_wallet_file):
+        with open(adb_wallet_file, 'r') as wallet_file:
+            adb_wallet_content = wallet_file.read().strip()
+    prepare_wallet(adbClient, adb_ocid, adb_wallet_dir, adb_wallet_content)
+    os.environ["TNS_ADMIN"] = adb_wallet_dir
     if DEBUG_MODE:
         logging.getLogger().info(f'DB wallet dir content = {os.listdir(adb_wallet_dir)}')
-        logging.getLogger().info(f'ORACLE_HOME content = {os.listdir(oracle_home)}')
 except Exception as w:
     logging.getLogger().error(f'Error retrieving DB wallet from ADB: {w}')
 
@@ -157,28 +175,22 @@ def handler(ctx, data: io.BytesIO=None):
 
 # --- DB client initialization
 
-    try:
-        oracledb.init_oracle_client(lib_dir=oracle_home)
-        if DEBUG_MODE:
-            logging.getLogger().info(f'DB client initialized.')
-    except Exception as ex:
-        logging.getLogger().error(f'Error initializing the DB client: {ex}')
-        logging.getLogger().info(f'Leaving handler w/errors.')
-
-        return response.Response(
-            ctx,
-            response_data=json.dumps({'status' : 1
-                                      ,'step' : 'DB client initialization'
-                                      ,'exception'  : str(ex)}, indent=2),
-            headers={"Content-Type": "application/json"}
-        )
+    if DEBUG_MODE:
+        logging.getLogger().info('Using python-oracledb thin mode with Autonomous Database wallet.')
 
 # --- DB Connection for ADMIN User
 
     try:
         if DEBUG_MODE:
-            logging.getLogger().info(f'oracledb.connect(user={adb_admin_user}, password={adb_admin_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')        
-        adb_connection = oracledb.connect(user=adb_admin_user, password=adb_admin_password, dsn=adb_sqlnet_alias, config_dir=adb_wallet_dir, wallet_location=adb_wallet_dir)
+            logging.getLogger().info(f'oracledb.connect(user={adb_admin_user}, password={adb_admin_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')
+        adb_connection = oracledb.connect(
+            user=adb_admin_user,
+            password=adb_admin_password,
+            dsn=adb_sqlnet_alias,
+            config_dir=adb_wallet_dir,
+            wallet_location=adb_wallet_dir,
+            wallet_password=adb_wallet_password
+        )
         if DEBUG_MODE:
             logging.getLogger().info(f'DB connection acquired for ADMIN User (dsn={adb_sqlnet_alias}).')
     except Exception as ex:
@@ -342,8 +354,15 @@ def handler(ctx, data: io.BytesIO=None):
 
     try:
         if DEBUG_MODE:
-            logging.getLogger().info(f'oracledb.connect(user={adb_app_user_name}, password={adb_app_user_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')        
-        adb_connection = oracledb.connect(user=adb_app_user_name, password=adb_app_user_password, dsn=adb_sqlnet_alias, config_dir=adb_wallet_dir, wallet_location=adb_wallet_dir)
+            logging.getLogger().info(f'oracledb.connect(user={adb_app_user_name}, password={adb_app_user_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')
+        adb_connection = oracledb.connect(
+            user=adb_app_user_name,
+            password=adb_app_user_password,
+            dsn=adb_sqlnet_alias,
+            config_dir=adb_wallet_dir,
+            wallet_location=adb_wallet_dir,
+            wallet_password=adb_wallet_password
+        )
         if DEBUG_MODE:
             logging.getLogger().info(f'DB connection acquired for APPUSER User (dsn={adb_sqlnet_alias}).')
     except Exception as ex:
@@ -398,9 +417,18 @@ def handler(ctx, data: io.BytesIO=None):
 # --- Inserts into iot_data
 
     try:
-        adb_cursor.execute('''insert into iot_data values (1, 'device1', 89.1, 2.2, TO_TIMESTAMP('2024-06-11 10:00:00', 'YYYY-MM-DD HH24:MI:SS'))''')
-        adb_cursor.execute('''insert into iot_data values (2, 'device2', 54.2, 10.5, TO_TIMESTAMP('2024-06-11 10:01:00', 'YYYY-MM-DD HH24:MI:SS'))''')
-        adb_cursor.execute('''insert into iot_data values (3, 'device3', 12.5, 11.7, TO_TIMESTAMP('2024-06-11 10:02:00', 'YYYY-MM-DD HH24:MI:SS'))''')
+        adb_cursor.execute(
+            "insert into iot_data values (:id, :device_id, :temperature, :humidity, TO_TIMESTAMP(:time_stamp, 'YYYY-MM-DD HH24:MI:SS'))",
+            {"id": 1, "device_id": "device1", "temperature": 89.1, "humidity": 2.2, "time_stamp": "2024-06-11 10:00:00"}
+        )
+        adb_cursor.execute(
+            "insert into iot_data values (:id, :device_id, :temperature, :humidity, TO_TIMESTAMP(:time_stamp, 'YYYY-MM-DD HH24:MI:SS'))",
+            {"id": 2, "device_id": "device2", "temperature": 54.2, "humidity": 10.5, "time_stamp": "2024-06-11 10:01:00"}
+        )
+        adb_cursor.execute(
+            "insert into iot_data values (:id, :device_id, :temperature, :humidity, TO_TIMESTAMP(:time_stamp, 'YYYY-MM-DD HH24:MI:SS'))",
+            {"id": 3, "device_id": "device3", "temperature": 12.5, "humidity": 11.7, "time_stamp": "2024-06-11 10:02:00"}
+        )
         adb_connection.commit()
         if DEBUG_MODE:
             logging.getLogger().info(f'IOT_DATA table with 3 inserts.')
@@ -420,7 +448,7 @@ def handler(ctx, data: io.BytesIO=None):
 # --- Create sequence iot_data_seq
 
     try:
-        adb_cursor.execute("create sequence iot_data_seq start with 3 increment by 1 nocache nocycle")
+        adb_cursor.execute("create sequence iot_data_seq start with 4 increment by 1 nocache nocycle")
         adb_cursor.execute("select iot_data_seq.nextval from DUAL")
         
         if DEBUG_MODE:
@@ -473,11 +501,11 @@ def handler(ctx, data: io.BytesIO=None):
             headers={"Content-Type": "application/json"}
         )
 
-        return response.Response(
-            ctx,
-            response_data=json.dumps({'status'     : 0
-                                      ,'fnadbsetup' : 'Finished'}, indent=2),
-            headers={"Content-Type": "application/json"}
-        )
+    return response.Response(
+        ctx,
+        response_data=json.dumps({'status'     : 0
+                                  ,'fnadbsetup' : 'Finished'}, indent=2),
+        headers={"Content-Type": "application/json"}
+    )
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-FROM oraclelinux:8-slim as ol8
+FROM oraclelinux:9-slim as ol9
 
 RUN microdnf install -y wget \
     tar \
     gzip \
     which 
 
-FROM fnproject/python:3.8.5-dev as build-stage
+FROM fnproject/python:3.11-dev as build-stage
 
 WORKDIR /function
 
@@ -18,7 +18,7 @@ ADD . /function/
 
 RUN rm -fr /function/.pip_cache
 
-FROM fnproject/python:3.8.5
+FROM fnproject/python:3.11
 
 WORKDIR /function
 

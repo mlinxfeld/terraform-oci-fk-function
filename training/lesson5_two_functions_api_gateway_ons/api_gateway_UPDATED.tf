@@ -1,26 +1,22 @@
-resource "oci_apigateway_gateway" "FoggyKitchenAPIGateway" {
-  compartment_id = var.compartment_ocid
-  endpoint_type  = "PUBLIC"
-  subnet_id      = oci_core_subnet.FoggyKitchenPublicSubnet.id
-  display_name   = "FoggyKitchenAPIGateway"
-}
+module "fk_api_gateway" {
+  source = "../../../terraform-oci-fk-api-gateway"
 
+  name             = "fk-fn-lesson5-api-gateway"
+  compartment_ocid = var.compartment_ocid
+  subnet_id        = module.fk_vcn.subnet_ids["apigw_public"]
+  path_prefix      = "/v1"
 
-resource "oci_apigateway_deployment" "FoggyKitchenAPIGatewayDeployment" {
-  compartment_id = var.compartment_ocid
-  gateway_id     = oci_apigateway_gateway.FoggyKitchenAPIGateway.id
-  path_prefix    = "/v1"
-  display_name   = "FoggyKitchenAPIGatewayDeployment"
-
-  specification {
-    routes {
-      backend {
-          type        = "ORACLE_FUNCTIONS_BACKEND"
-          function_id = module.oci-fk-initiator-function.oci_app_fn.fn_ocid
-      }
-      methods = ["POST"]
+  routes = [
+    {
+      name    = "fninitiator"
       path    = "/fninitiator"
-
+      methods = ["POST"]
+      backend = {
+        type        = "ORACLE_FUNCTIONS_BACKEND"
+        function_id = module.oci-fk-initiator-function.oci_app_fn.fn_ocid
+      }
     }
-  }
+  ]
+
+  depends_on = [module.fk_policy_apigateway_functions]
 }

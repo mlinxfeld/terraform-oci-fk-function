@@ -27,8 +27,7 @@ def setup_oci_client(client_type, signer, stream_endpoint):
         elif client_type == 'ons':
             oci_client = oci.ons.NotificationDataPlaneClient(config={}, signer=signer)
         else:
-            logging.getLogger().info(f'Invalid Client type {client_type}')
-            quit()
+            raise ValueError(f'Invalid Client type {client_type}')
 
         if DEBUG_MODE:
             logging.getLogger().info(f'Got {client_type} Client ok')
@@ -37,7 +36,33 @@ def setup_oci_client(client_type, signer, stream_endpoint):
 
     except Exception as fc:
         logging.getLogger().info(f'Raised exception: {str(fc)} attempting to initialize {client_type} Client')
-        quit()
+        raise
+
+
+def normalize_stream_records(body):
+    base_device_id = body.get("device_id")
+    device_data = body.get("device_data", {})
+
+    if isinstance(device_data, list):
+        records = []
+        for index, item in enumerate(device_data, start=1):
+            record_device_id = item.get("device_id", base_device_id)
+            if record_device_id is None:
+                raise ValueError(f"Missing device_id for record {index}.")
+
+            records.append({
+                "device_id": str(record_device_id),
+                "payload": item
+            })
+        return records
+
+    if base_device_id is None:
+        raise ValueError("device_id must be provided for single-record payloads.")
+
+    return [{
+        "device_id": str(base_device_id),
+        "payload": device_data
+    }]
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -70,19 +95,24 @@ def handler(ctx, data: io.BytesIO = None):
 
     try:
         body = json.loads(data.getvalue())
-        device_id = str(body.get("device_id"))
-        device_data = body.get("device_data", {})
-        device_data_str = json.dumps(device_data)
+        records = normalize_stream_records(body)
 
-        stream_message_entry = oci.streaming.models.PutMessagesDetailsEntry()
-        stream_message_entry.key = b64encode(bytes(str(device_id), 'utf-8')).decode('utf-8')
-        stream_message_entry.value = b64encode(bytes(device_data_str, 'utf-8')).decode('utf-8')
-        
-        stream_messages = oci.streaming.models.PutMessagesDetails()
-        stream_messages.messages = [stream_message_entry]
-        streamClient.put_messages(stream_ocid, stream_messages)
         if DEBUG_MODE:
-            logging.getLogger().info(f'Message sent to stream: key={stream_message_entry.key}, value={stream_message_entry.value}')
+            logging.getLogger().info(f'Preparing asynchronous processing for {len(records)} record(s).')
+
+        stream_messages = oci.streaming.models.PutMessagesDetails()
+        stream_messages.messages = []
+
+        for record in records:
+            stream_message_entry = oci.streaming.models.PutMessagesDetailsEntry()
+            stream_message_entry.key = b64encode(record["device_id"].encode("utf-8")).decode("utf-8")
+            stream_message_entry.value = b64encode(json.dumps(record["payload"]).encode("utf-8")).decode("utf-8")
+            stream_messages.messages.append(stream_message_entry)
+
+        streamClient.put_messages(stream_ocid, stream_messages)
+
+        if DEBUG_MODE:
+            logging.getLogger().info(f'Sent {len(stream_messages.messages)} message(s) to stream.')
 
     except Exception as ex:
         logging.getLogger().error(f'Error pushing data to Stream: {ex}')
@@ -123,7 +153,9 @@ def handler(ctx, data: io.BytesIO = None):
 
     return response.Response(
         ctx,
-        response_data=json.dumps({'status'     : 0
-                                ,'fninitiator' : 'Finished'}, indent=2),
+        response_data=json.dumps({'status'      : 0
+                                ,'fninitiator' : 'Finished'
+                                ,'record_count': len(records)
+                                ,'device_id'   : records[0]["device_id"] if records else None}, indent=2),
         headers={"Content-Type": "application/json"}
     )

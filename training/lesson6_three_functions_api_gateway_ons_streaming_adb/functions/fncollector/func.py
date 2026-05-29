@@ -29,8 +29,7 @@ def setup_oci_client(client_type, signer, stream_endpoint):
         elif client_type == 'ons':
             oci_client = oci.ons.NotificationDataPlaneClient(config={}, signer=signer)
         else:
-            logging.getLogger().info(f'Invalid Client type {client_type}')
-            quit()
+            raise ValueError(f'Invalid Client type {client_type}')
 
         if DEBUG_MODE:
             logging.getLogger().info(f'Got {client_type} Client ok')
@@ -39,7 +38,7 @@ def setup_oci_client(client_type, signer, stream_endpoint):
 
     except Exception as fc:
         logging.getLogger().info(f'Raised exception: {str(fc)} attempting to initialize {client_type} Client')
-        quit()
+        raise
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -121,6 +120,42 @@ def generate_random_string(length=8):
 # ----------------------------------------------------------------------------------------------------------------------
 
 
+def prepare_wallet(adb_client, adb_ocid, wallet_dir, wallet_content_b64=None):
+    os.makedirs(wallet_dir, exist_ok=True)
+    for file_name in os.listdir(wallet_dir):
+        file_path = os.path.join(wallet_dir, file_name)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    wallet_zip_path = os.path.join(wallet_dir, "dbwallet.zip")
+
+    if wallet_content_b64:
+        if DEBUG_MODE:
+            logging.getLogger().info('Using wallet content provided via function configuration.')
+        with open(wallet_zip_path, 'wb') as wallet_file:
+            wallet_file.write(b64decode(wallet_content_b64))
+    else:
+        get_wallet_from_adb(adb_client, adb_ocid, wallet_dir)
+        return
+
+    if DEBUG_MODE:
+        logging.getLogger().info(f'Unziping the wallet to directory {wallet_dir}')
+
+    with ZipFile(wallet_zip_path, 'r') as zipObj:
+        zipObj.extractall(wallet_dir)
+
+    tnsnames_file = os.path.join(wallet_dir, 'tnsnames.ora')
+    sqlnet_file = os.path.join(wallet_dir, 'sqlnet.ora')
+
+    if DEBUG_MODE:
+        read_and_log_file_content(tnsnames_file)
+        read_and_log_file_content(sqlnet_file)
+
+    if not os.path.exists(tnsnames_file) or not os.path.exists(sqlnet_file):
+        raise FileNotFoundError(f'ADB wallet files were not extracted correctly into {wallet_dir}.')
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 # Setting environment
 DEBUG_MODE = os.getenv("DEBUG_MODE") is not None
 
@@ -133,13 +168,15 @@ if not stream_ocid or not stream_endpoint:
 
 # Database configuration
 adb_ocid = os.getenv('ADB_OCID')
-oracle_home = os.getenv('ORACLE_HOME')
 adb_app_user_name = os.getenv('ADB_APP_USER_NAME')
 adb_app_user_password = os.getenv('ADB_APP_USER_PASSWORD')
 adb_sqlnet_alias = os.getenv('ADB_SQLNET_ALIAS')
-adb_wallet_dir = '/tmp'     
+adb_wallet_content = os.getenv('ADB_WALLET_CONTENT')
+adb_wallet_password = os.getenv('ADB_WALLET_PASSWORD')
+adb_wallet_dir = '/tmp/adb_wallet'     
+adb_wallet_file = os.path.join(os.path.dirname(__file__), 'adb_wallet.b64')
 
-if not adb_ocid or not oracle_home or not adb_app_user_name or not adb_app_user_password or not adb_sqlnet_alias or not adb_wallet_dir:
+if not adb_ocid or not adb_app_user_name or not adb_app_user_password or not adb_sqlnet_alias or not adb_wallet_dir:
     error_message = 'Missing database configuration keys'
     logging.getLogger().error(error_message)
 
@@ -156,10 +193,13 @@ streamClient = setup_oci_client('streaming', signer, str("https://" + stream_end
 try:
     if DEBUG_MODE:
         logging.getLogger().info(f'Retrieving wallet from ADB: {adb_ocid}.')
-    get_wallet_from_adb(adbClient, adb_ocid, adb_wallet_dir)
+    if not adb_wallet_content and os.path.exists(adb_wallet_file):
+        with open(adb_wallet_file, 'r') as wallet_file:
+            adb_wallet_content = wallet_file.read().strip()
+    prepare_wallet(adbClient, adb_ocid, adb_wallet_dir, adb_wallet_content)
+    os.environ["TNS_ADMIN"] = adb_wallet_dir
     if DEBUG_MODE:
         logging.getLogger().info(f'DB wallet dir content = {os.listdir(adb_wallet_dir)}')
-        logging.getLogger().info(f'ORACLE_HOME content = {os.listdir(oracle_home)}')
 except Exception as w:
     logging.getLogger().error(f'Error retrieving DB wallet from ADB: {w}')
 
@@ -198,10 +238,24 @@ def handler(ctx, data: io.BytesIO = None):
         cursor_response = streamClient.create_group_cursor(stream_ocid, cursor_details)    
         stream_cursor = cursor_response.data.value
 
-        get_messages_response = streamClient.get_messages(stream_ocid, stream_cursor, limit=10)
+        messages = []
+        next_cursor = stream_cursor
+
+        while True:
+            get_messages_response = streamClient.get_messages(stream_ocid, next_cursor, limit=100)
+            batch = list(get_messages_response.data)
+
+            if not batch:
+                break
+
+            messages.extend(batch)
+            next_cursor = get_messages_response.headers.get("opc-next-cursor")
+
+            if not next_cursor:
+                break
 
         if DEBUG_MODE:
-            logging.getLogger().info(f'Fetched messages from stream: {get_messages_response.data}')
+            logging.getLogger().info(f'Fetched {len(messages)} message(s) from stream.')
 
     except Exception as ex:
         logging.getLogger().error(f'Error obtaining data from Stream: {ex}')
@@ -217,29 +271,22 @@ def handler(ctx, data: io.BytesIO = None):
 
 # --- DB client initialization
 
-    try:
-        oracledb.init_oracle_client(lib_dir=oracle_home)
-        if DEBUG_MODE:
-            logging.getLogger().info(f'DB client initialized.')
-
-    except Exception as ex:
-        logging.getLogger().error(f'Error initializing the DB client: {ex}')
-        logging.getLogger().info(f'Leaving handler w/errors.')
-
-        return response.Response(
-            ctx,
-            response_data=json.dumps({'status' : 1
-                                      ,'step' : 'DB client initialization'
-                                      ,'exception'  : str(ex)}, indent=2),
-            headers={"Content-Type": "application/json"}
-        )
+    if DEBUG_MODE:
+        logging.getLogger().info('Using python-oracledb thin mode with Autonomous Database wallet.')
 
 # --- DB Connection for APPUSER
 
     try:
         if DEBUG_MODE:
-            logging.getLogger().info(f'oracledb.connect(user={adb_app_user_name}, password={adb_app_user_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')        
-        adb_connection = oracledb.connect(user=adb_app_user_name, password=adb_app_user_password, dsn=adb_sqlnet_alias, config_dir=adb_wallet_dir, wallet_location=adb_wallet_dir)
+            logging.getLogger().info(f'oracledb.connect(user={adb_app_user_name}, password={adb_app_user_password}, dsn={adb_sqlnet_alias}, config_dir={adb_wallet_dir}, wallet_location={adb_wallet_dir})')
+        adb_connection = oracledb.connect(
+            user=adb_app_user_name,
+            password=adb_app_user_password,
+            dsn=adb_sqlnet_alias,
+            config_dir=adb_wallet_dir,
+            wallet_location=adb_wallet_dir,
+            wallet_password=adb_wallet_password
+        )
         if DEBUG_MODE:
             logging.getLogger().info(f'DB connection acquired for APPUSER User (dsn={adb_sqlnet_alias}).')
     
@@ -277,22 +324,31 @@ def handler(ctx, data: io.BytesIO = None):
 
 # --- Update iot_data table with Stream message response
 
-    if len(get_messages_response.data):    
+    if messages:
         try:
-            for message in get_messages_response.data:
+            for message in messages:
                 cursor_result = adb_cursor.execute("select iot_data_seq.nextval from dual")
-                rows = cursor_result.fetchone()
-                new_id = str(rows).replace(',','')
+                row = cursor_result.fetchone()
+                new_id = row[0]
                 new_device = str(b64decode(message.key).decode('utf-8'))
                 new_device_data_str = b64decode(message.value).decode('utf-8')
                 new_device_data = json.loads(new_device_data_str)
                 new_temperature = new_device_data.get('temperature')
                 new_humidity = new_device_data.get('humidity')
-                iot_record = "insert into iot_data values ({},'{}',{},{},SYSDATE)".format(new_id, new_device, new_temperature, new_humidity)
-                adb_cursor.execute(iot_record)
+                adb_cursor.execute(
+                    "insert into iot_data values (:id, :device_id, :temperature, :humidity, SYSDATE)",
+                    {
+                        "id": new_id,
+                        "device_id": new_device,
+                        "temperature": new_temperature,
+                        "humidity": new_humidity
+                    }
+                )
                 adb_connection.commit()
                 if DEBUG_MODE:
-                    logging.getLogger().info(f'IOT_DATA table inserted: ({iot_record}).')
+                    logging.getLogger().info(
+                        f'IOT_DATA table inserted: id={new_id}, device_id={new_device}, temperature={new_temperature}, humidity={new_humidity}.'
+                    )
 
         except Exception as ex:
             logging.getLogger().error(f'Error inserting data into IOT_DATA table: {ex}')
@@ -373,4 +429,3 @@ def handler(ctx, data: io.BytesIO = None):
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-

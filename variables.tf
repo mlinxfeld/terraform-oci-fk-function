@@ -1,102 +1,180 @@
-variable "tenancy_ocid" {}
-variable "region" {}
-variable "compartment_ocid" {}
+variable "tenancy_ocid" {
+  description = "Tenancy OCID used for namespace and region discovery."
+  type        = string
+}
 
-variable "ocir_user_name" {}
-variable "ocir_user_password" {}
+variable "region" {
+  description = "OCI region used for provider context and OCIR endpoint resolution."
+  type        = string
+}
+
+variable "compartment_ocid" {
+  description = "Compartment OCID where function resources will be created."
+  type        = string
+}
+
+variable "ocir_user_name" {
+  description = "OCI Registry username used for docker login."
+  type        = string
+}
+
+variable "ocir_user_password" {
+  description = "OCI Registry auth token or password used for docker login."
+  type        = string
+  sensitive   = true
+}
 
 variable "VCN-CIDR" {
-  default = "10.0.0.0/16"
+  description = "VCN CIDR used only when use_my_fn_network is false."
+  type        = string
+  default     = "10.0.0.0/16"
 }
 
 variable "fnsubnet-CIDR" {
-  default = "10.0.1.0/24"
+  description = "Subnet CIDR used only when use_my_fn_network is false."
+  type        = string
+  default     = "10.0.1.0/24"
 }
 
 variable "ocir_repo_name" {
-  default = "fkfn"
+  description = "OCI Container Registry repository prefix used for the function image."
+  type        = string
+  default     = "fkfn"
 }
 
 variable "fk_app_name" {
-  default = "fkapp"
+  description = "OCI Functions application name."
+  type        = string
+  default     = "fkapp"
 }
 
 variable "fk_fn_name" {
-  default = "fkfn"
+  description = "OCI Function name."
+  type        = string
+  default     = "fkfn"
 }
 
 variable "fk_fn_version" {
-  default = "0.0.1" 
+  description = "Function image tag."
+  type        = string
+  default     = "0.0.1"
 }
 
 variable "memory_in_mbs" {
-  default = "256"
+  description = "Memory allocated to the function, in MB."
+  type        = number
+  default     = 256
 }
 
 variable "fk_shape" {
-  default = "GENERIC_ARM" # GENERIC_X86_ARM or GENERIC_X86 or GENERIC_ARM
+  description = "Functions application shape."
+  type        = string
+  default     = "GENERIC_ARM"
+
+  validation {
+    condition     = contains(["GENERIC_X86_ARM", "GENERIC_X86", "GENERIC_ARM"], var.fk_shape)
+    error_message = "fk_shape must be one of: GENERIC_X86_ARM, GENERIC_X86, GENERIC_ARM."
+  }
 }
 
 variable "invoke_fn" {
-  default = false
+  description = "Invoke the function automatically after deployment."
+  type        = bool
+  default     = false
 }
 
 variable "use_my_fn" {
-  default = false
+  description = "Inject your own function source files into the embedded function scaffold."
+  type        = bool
+  default     = false
 }
 
 variable "dockerfile_content" {
-  default = ""
+  description = "Dockerfile content used when use_my_fn is true."
+  type        = string
+  default     = ""
 }
 
 variable "func_py_content" {
-  default = ""
+  description = "func.py content used when use_my_fn is true."
+  type        = string
+  default     = ""
 }
 
 variable "func_yaml_content" {
-  default = ""
+  description = "func.yaml content used when use_my_fn is true."
+  type        = string
+  default     = ""
 }
 
 variable "requirements_txt_content" {
-  default = ""
+  description = "requirements.txt content used when use_my_fn is true."
+  type        = string
+  default     = ""
+}
+
+variable "extra_files" {
+  description = "Additional files written into the generated function source directory when use_my_fn is true."
+  type        = map(string)
+  default     = {}
 }
 
 variable "use_my_fn_network" {
-  default = false
+  description = "Use an externally managed subnet instead of creating module-managed networking."
+  type        = bool
+  default     = false
 }
 
 variable "my_fn_subnet_ocid" {
-  default = ""
+  description = "External subnet OCID used when use_my_fn_network is true."
+  type        = string
+  default     = ""
 }
 
 variable "use_my_fn_app" {
-  default = false  
+  description = "Attach the function to an externally managed Functions application."
+  type        = bool
+  default     = false
 }
 
 variable "my_fn_app_ocid" {
-  default = ""
-}  
+  description = "External Functions application OCID used when use_my_fn_app is true."
+  type        = string
+  default     = ""
+}
 
 variable "use_oci_logging" {
-  default = false  
+  description = "Enable OCI Logging for function invocation logs."
+  type        = bool
+  default     = false
 }
 
 variable "oci_logging_group_name" {
-  default = "FoggyKitchenFnAppLogGroup"
+  description = "OCI Logging log group name used when use_oci_logging is true."
+  type        = string
+  default     = "FoggyKitchenFnAppLogGroup"
 }
 
 variable "oci_logging_group_description" {
-  default = "Foggy Kitchen Fn App Log Group"
+  description = "OCI Logging log group description used when use_oci_logging is true."
+  type        = string
+  default     = "Foggy Kitchen Fn App Log Group"
 }
 
 variable "oci_logging_log_name" {
-  default = "FoggyKitchenFnAppInvokeLog"
+  description = "OCI Logging log name used when use_oci_logging is true."
+  type        = string
+  default     = "FoggyKitchenFnAppInvokeLog"
 }
 
 variable "fn_config" {
-  default = {}
+  description = "Optional function configuration map exposed as function environment variables."
+  type        = map(string)
+  default     = {}
 }
 
 variable "fn_timeout_in_seconds" {
-   default = 30
+  description = "Function timeout in seconds."
+  type        = number
+  default     = 30
 }

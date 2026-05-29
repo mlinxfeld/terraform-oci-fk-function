@@ -1,51 +1,62 @@
-resource "oci_identity_policy" "FoggyKitchenAPIGatewayPolicy" {
-  provider = oci.homeregion  
-  name = "FoggyKitchenAPIGatewayPolicy"
-  description = "FoggyKitchenAPIGatewayPolicy"
-  compartment_id = var.compartment_ocid
-  statements = ["ALLOW any-user to use functions-family in compartment id ${var.compartment_ocid} where ALL { request.principal.type= 'ApiGateway' , request.resource.compartment.id = '${var.compartment_ocid}'}"]
-}
+module "fk_policy_apigateway_functions" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-policy.git?ref=v0.1.0"
 
-resource "oci_identity_dynamic_group" "FoggyKitchenFunctionDG" {
-  provider       = oci.homeregion  
-  compartment_id = var.tenancy_ocid
-  name           = "FoggyKitchenFunctionDG"
-  description    = "FoggyKitchen Function Dynamic Group"
-  matching_rule  = "ALL {resource.type = 'fnfunc', resource.compartment.id = '${var.compartment_ocid}'}"
-}
+  providers = {
+    oci = oci.homeregion
+  }
 
-resource "oci_identity_policy" "FoggyKitchenFnONSPolicy" {
-  provider = oci.homeregion  
-  name = "FoggyKitchenFnONSPolicy"
-  description = "FoggyKitchenFnONSPolicy"
-  compartment_id = var.tenancy_ocid
+  tenancy_ocid = var.tenancy_ocid
 
-  statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to manage ons-topics in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to use ons-subscriptions in tenancy"
-  ]
-}  
-resource "oci_identity_policy" "FoggyKitchenFnStreamPolicy" {
-  provider = oci.homeregion  
-  name = "FoggyKitchenFnStreamPolicy"
-  description = "FoggyKitchenFnStreamPolicy"
-  compartment_id = var.tenancy_ocid
-
-  statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to manage all-resources in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to use stream-push in compartment id ${var.compartment_ocid}"
+  policies = [
+    {
+      name        = "fk_fn_lesson6_apigateway_policy"
+      description = "Allow OCI API Gateway to invoke Functions in the lesson6 compartment"
+      statements = [
+        "ALLOW any-user to use functions-family in compartment id ${var.compartment_ocid} where ALL { request.principal.type = 'ApiGateway', request.resource.compartment.id = '${var.compartment_ocid}' }"
+      ]
+    }
   ]
 }
 
-resource "oci_identity_policy" "FoggyKitchenFnADBPolicy" {
-  provider       = oci.homeregion  
-  depends_on     = [oci_identity_dynamic_group.FoggyKitchenFunctionDG]
-  name           = "FoggyKitchenFnADBPolicy"
-  description    = "FoggyKitchenFnADBPolicy"
-  compartment_id = var.tenancy_ocid
+module "fk_policy_function_dataflow" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-policy.git?ref=v0.1.0"
 
-  statements = [
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to use database-family in compartment id ${var.compartment_ocid}",
-    "Allow dynamic-group ${oci_identity_dynamic_group.FoggyKitchenFunctionDG.name} to manage autonomous-database in compartment id ${var.compartment_ocid}"
+  providers = {
+    oci = oci.homeregion
+  }
+
+  tenancy_ocid = var.tenancy_ocid
+
+  dynamic_group = {
+    name          = "fk_fn_lesson6_dg"
+    description   = "Dynamic group for lesson6 Functions that publish to ONS, Streaming, and ADB"
+    matching_rule = "ALL {resource.type = 'fnfunc', resource.compartment.id = '${var.compartment_ocid}'}"
+  }
+
+  policies = [
+    {
+      name        = "fk_fn_lesson6_ons_policy"
+      description = "Allow lesson6 Functions to publish to OCI Notifications"
+      statements = [
+        "Allow dynamic-group fk_fn_lesson6_dg to manage ons-topics in tenancy",
+        "Allow dynamic-group fk_fn_lesson6_dg to use ons-subscriptions in tenancy"
+      ]
+    },
+    {
+      name        = "fk_fn_lesson6_stream_policy"
+      description = "Allow lesson6 Functions to use OCI Streaming"
+      statements = [
+        "Allow dynamic-group fk_fn_lesson6_dg to manage all-resources in compartment id ${var.compartment_ocid}",
+        "Allow dynamic-group fk_fn_lesson6_dg to use stream-push in compartment id ${var.compartment_ocid}"
+      ]
+    },
+    {
+      name        = "fk_fn_lesson6_adb_policy"
+      description = "Allow lesson6 Functions to use Autonomous Database resources"
+      statements = [
+        "Allow dynamic-group fk_fn_lesson6_dg to use database-family in compartment id ${var.compartment_ocid}",
+        "Allow dynamic-group fk_fn_lesson6_dg to manage autonomous-database in compartment id ${var.compartment_ocid}"
+      ]
+    }
   ]
 }

@@ -1,10 +1,15 @@
-resource "oci_streaming_stream_pool" "FoggyKitchenStreamPool" {
-    compartment_id = var.compartment_ocid
-    name = "FoggyKitchenStreamPool"
-}
+module "fk_streaming" {
+  source = "git::https://github.com/foggykitchen/terraform-oci-fk-streaming.git?ref=v0.1.0"
 
-resource "oci_streaming_stream" "FoggyKitchenStream" {
-    name = "FoggyKitchenStream"
-    partitions = 1
-    stream_pool_id = oci_streaming_stream_pool.FoggyKitchenStreamPool.id
+  compartment_ocid = var.compartment_ocid
+  name             = "fk-fn-lesson9-streaming"
+  stream_pool_name = "FoggyKitchenStreamPool"
+
+  streams = {
+    iot_data = {
+      name               = "FoggyKitchenStream"
+      partitions         = 1
+      retention_in_hours = 24
+    }
+  }
 }
