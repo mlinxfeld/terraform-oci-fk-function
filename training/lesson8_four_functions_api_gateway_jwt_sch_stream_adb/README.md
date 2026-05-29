@@ -129,15 +129,8 @@ export FN_JWT_TOKEN="$(tofu output -json | jq -r '.fn_jwt_token.value')"
 Send the request without the JWT token header:
 
 ```bash
-curl -i -s -X POST "$FNINITIATOR_URL" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "device_id": "device888",
-    "device_data": {
-      "temperature": "88.01",
-      "humidity": "44.22"
-    }
-  }'
+curl -i -s -X POST \
+  "$FNINITIATOR_URL?device_id=device888&temperature=88.01&humidity=44.22"
 ```
 
 Expected healthy unauthorized result:
@@ -151,19 +144,12 @@ www-authenticate: API-key
 
 ### Authorized Request
 
-Repeat the request with the valid token:
+Repeat the request with the valid token. In this lesson the verified stable path is to pass the payload through query parameters after custom authentication:
 
 ```bash
-curl -s -X POST "$FNINITIATOR_URL" \
-  -H "Content-Type: application/json" \
-  -H "token: $FN_JWT_TOKEN" \
-  -d '{
-    "device_id": "device888",
-    "device_data": {
-      "temperature": "88.01",
-      "humidity": "44.22"
-    }
-  }' | jq .
+curl -s -X POST \
+  "$FNINITIATOR_URL?device_id=device888&temperature=88.01&humidity=44.22" \
+  -H "token: $FN_JWT_TOKEN" | jq .
 ```
 
 Expected healthy response:
@@ -234,11 +220,11 @@ Then query the database through the same Python runtime used by `fncollector`:
 ```bash
 docker run --rm \
   -v "$ADB_WALLET_DIR":/tmp/adb_wallet \
+  -e TNS_ADMIN=/tmp/adb_wallet \
   --entrypoint /usr/bin/python3.11 \
   fra.ocir.io/fr5tvfiq2xhq/fkfn/fncollector:0.0.1 \
-  -c "import json, os, oracledb; \
-os.environ['TNS_ADMIN']='/tmp/adb_wallet'; \
-conn=oracledb.connect(user='APPUSER', password='BEstrO0ng_#11', dsn='foggykitchenadb_medium', config_dir='/tmp/adb_wallet', wallet_location='/tmp/adb_wallet', wallet_password='TmpWallet11'); \
+  -c "import json, oracledb; \
+conn=oracledb.connect(user='APPUSER', password='BEstrO0ng_#11', dsn='foggykitchenadb_tp', config_dir='/tmp/adb_wallet', wallet_location='/tmp/adb_wallet', wallet_password='TmpWallet11'); \
 cur=conn.cursor(); \
 cur.execute(\"select id, device_id, temperature, humidity from iot_data where device_id = 'device888' order by id desc\"); \
 rows=cur.fetchall(); \
@@ -270,11 +256,11 @@ Before testing the business request, confirm that `fnadbsetup` prepared the sche
 ```bash
 docker run --rm \
   -v "$ADB_WALLET_DIR":/tmp/adb_wallet \
+  -e TNS_ADMIN=/tmp/adb_wallet \
   --entrypoint /usr/bin/python3.11 \
   fra.ocir.io/fr5tvfiq2xhq/fkfn/fncollector:0.0.1 \
-  -c "import json, os, oracledb; \
-os.environ['TNS_ADMIN']='/tmp/adb_wallet'; \
-conn=oracledb.connect(user='APPUSER', password='BEstrO0ng_#11', dsn='foggykitchenadb_medium', config_dir='/tmp/adb_wallet', wallet_location='/tmp/adb_wallet', wallet_password='TmpWallet11'); \
+  -c "import json, oracledb; \
+conn=oracledb.connect(user='APPUSER', password='BEstrO0ng_#11', dsn='foggykitchenadb_tp', config_dir='/tmp/adb_wallet', wallet_location='/tmp/adb_wallet', wallet_password='TmpWallet11'); \
 cur=conn.cursor(); \
 cur.execute(\"select id, device_id, temperature, humidity from iot_data order by id\"); \
 rows=cur.fetchall(); \

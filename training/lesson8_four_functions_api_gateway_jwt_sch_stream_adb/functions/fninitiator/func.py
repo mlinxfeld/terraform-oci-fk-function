@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from base64 import b64encode
+from urllib.parse import parse_qs, urlparse
 
 import oci
 from fdk import response
@@ -58,6 +59,70 @@ def normalize_stream_records(body):
     }]
 
 
+def parse_request_body(data):
+    if data is None:
+        return None
+
+    raw_body = data.getvalue()
+    if raw_body is None:
+        return None
+
+    if isinstance(raw_body, bytes):
+        raw_body = raw_body.decode("utf-8")
+
+    if not str(raw_body).strip():
+        return None
+
+    return json.loads(raw_body)
+
+
+def get_first_value(mapping, key):
+    if key not in mapping:
+        return None
+
+    value = mapping.get(key)
+    if isinstance(value, list):
+        return value[0] if value else None
+
+    return value
+
+
+def build_body_from_request(ctx):
+    request_url = ctx.RequestURL() or ""
+    query_params = parse_qs(urlparse(request_url).query)
+    headers = {str(k).lower(): v for k, v in ctx.HTTPHeaders().items()}
+
+    device_id = (
+        get_first_value(query_params, "device_id")
+        or headers.get("x-device-id")
+        or headers.get("device_id")
+    )
+    temperature = (
+        get_first_value(query_params, "temperature")
+        or headers.get("x-temperature")
+        or headers.get("temperature")
+    )
+    humidity = (
+        get_first_value(query_params, "humidity")
+        or headers.get("x-humidity")
+        or headers.get("humidity")
+    )
+
+    if not device_id:
+        raise ValueError("Request body is empty and device_id was not provided in query params or headers.")
+
+    if temperature is None or humidity is None:
+        raise ValueError("Request body is empty and temperature/humidity were not provided in query params or headers.")
+
+    return {
+        "device_id": device_id,
+        "device_data": {
+            "temperature": str(temperature),
+            "humidity": str(humidity),
+        },
+    }
+
+
 DEBUG_MODE = os.getenv("DEBUG_MODE") is not None
 
 stream_ocid = os.getenv("STREAM_OCID")
@@ -80,7 +145,12 @@ def handler(ctx, data: io.BytesIO = None):
         logging.getLogger().info("Starting fninitiator handler...")
 
     try:
-        body = json.loads(data.getvalue())
+        body = parse_request_body(data)
+        if body is None:
+            if DEBUG_MODE:
+                logging.getLogger().info("Request body is empty. Falling back to query params / headers.")
+            body = build_body_from_request(ctx)
+
         records = normalize_stream_records(body)
 
         if DEBUG_MODE:
