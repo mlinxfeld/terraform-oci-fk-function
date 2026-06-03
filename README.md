@@ -4,6 +4,8 @@ This repository contains a reusable **Terraform / OpenTofu module** and progress
 
 It is part of the [FoggyKitchen.com](https://foggykitchen.com) training ecosystem and is designed as a composable starting point for OCI Functions scenarios that can later be combined with API Gateway, Notifications, Streaming, Service Connector Hub, Logging, and database-backed workflows.
 
+Support expectations are documented in [SUPPORT.md](SUPPORT.md).
+
 ---
 
 ## Purpose
